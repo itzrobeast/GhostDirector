@@ -9,6 +9,7 @@ from continuity import ContinuityDirector
 from exporter import Exporter
 from prompt_builder import PromptBuilder
 from project import Project
+from renderer import Renderer
 from scene_planner import ScenePlanner
 
 
@@ -22,6 +23,7 @@ class GhostDirector:
         self.director_brain = DirectorBrain()
         self.continuity_director = ContinuityDirector()
         self.prompt_builder = PromptBuilder()
+        self.renderer = Renderer()
         self.scene_planner = ScenePlanner()
 
     def direct_project(
@@ -92,6 +94,7 @@ class GhostDirector:
 
         project.scenes = scenes
         Exporter.export(project)
+        self.renderer.render(project)
 
         print(f"Created {len(scenes)} scenes")
 
