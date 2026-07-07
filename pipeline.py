@@ -80,6 +80,24 @@ class Pipeline:
 
         return scenes
 
+    def rerender_scenes(
+        self,
+        project: Project,
+        scene_numbers: List[int],
+    ) -> List[str]:
+        if not project.scenes:
+            raise ValueError("Project has no scenes to rerender.")
+
+        rendered_videos = self.renderer.render(
+            project,
+            scene_numbers=scene_numbers,
+        )
+        self.editor.prepare(project)
+        self.asset_cache.register_project_assets(project)
+        Exporter.export(project, self.asset_manager)
+
+        return rendered_videos
+
     def _run_output_stages(
         self,
         project: Project,

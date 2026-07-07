@@ -34,6 +34,16 @@ class GhostDirector:
 
         return scenes
 
+    def rerender_scenes(
+        self,
+        project: Project,
+        scene_numbers: List[int],
+    ) -> List[str]:
+        return self.pipeline.rerender_scenes(
+            project,
+            scene_numbers,
+        )
+
     def analyze(
         self,
         song_path: str,
