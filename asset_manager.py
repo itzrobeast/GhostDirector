@@ -27,6 +27,9 @@ class AssetManager:
     def get_project_json(self) -> Path:
         return self.projects_dir / "project.json"
 
+    def get_production_status_json(self) -> Path:
+        return self.projects_dir / "production_status.json"
+
     def get_scene_video(self, scene_number: int) -> Path:
         return self.videos_dir / f"scene_{scene_number:03d}.mp4"
 

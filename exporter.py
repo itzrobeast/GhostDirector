@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Optional
 
 from asset_manager import AssetManager
+from production_status import ProductionStatus
 
 
 class Exporter:
@@ -15,6 +16,10 @@ class Exporter:
         assets = asset_manager or AssetManager()
 
         Exporter._write_json(assets.get_project_json(), asdict(project))
+        Exporter._write_json(
+            assets.get_production_status_json(),
+            asdict(ProductionStatus().review(project)),
+        )
 
         for scene in project.scenes:
             Exporter._write_json(
