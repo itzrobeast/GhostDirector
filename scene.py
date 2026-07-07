@@ -30,7 +30,6 @@ class Scene:
     camera: str
     lens: str
     movement: str
-    camera_language: Dict[str, str] = field(default_factory=dict)
 
     # Character
     action: str
@@ -44,6 +43,7 @@ class Scene:
     environment: str = ""
     mood: str = ""
     dominant_color_palette: str = ""
+    camera_language: Dict[str, str] = field(default_factory=dict)
     continuity_notes: str = ""
     continuity_metadata: Dict[str, Any] = field(default_factory=dict)
     directorial_beats: Dict[str, str] = field(default_factory=dict)
