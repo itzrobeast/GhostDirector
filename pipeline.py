@@ -1,4 +1,5 @@
-from typing import List
+from dataclasses import dataclass
+from typing import List, Optional
 
 from asset_cache import AssetCache
 from asset_manager import AssetManager
@@ -17,6 +18,15 @@ from renderer import Renderer
 from scene import Scene
 from scene_planner import ScenePlanner
 from timeline import Timeline
+
+
+@dataclass
+class PipelineRunConfig:
+    export: bool = True
+    render: bool = True
+    edit: bool = True
+    continuity_review: bool = True
+    cache_assets: bool = True
 
 
 class Pipeline:
@@ -39,7 +49,9 @@ class Pipeline:
         self,
         project: Project,
         scene_length: int = 15,
+        config: Optional[PipelineRunConfig] = None,
     ) -> List[Scene]:
+        run_config = config or PipelineRunConfig()
         story = project.source_text
         scenes = self.scene_planner.plan(
             project,
@@ -63,13 +75,29 @@ class Pipeline:
 
         project.scenes = scenes
         project.timeline = Timeline.from_scenes(scenes)
-        Exporter.export(project, self.asset_manager)
-        self.renderer.render(project)
-        self.editor.prepare(project)
-        self.continuity_manager.review(project)
-        self.asset_cache.register_project_assets(project)
+        self._run_output_stages(project, run_config)
 
         return scenes
+
+    def _run_output_stages(
+        self,
+        project: Project,
+        config: PipelineRunConfig,
+    ) -> None:
+        if config.export:
+            Exporter.export(project, self.asset_manager)
+
+        if config.render:
+            self.renderer.render(project)
+
+        if config.edit:
+            self.editor.prepare(project)
+
+        if config.continuity_review:
+            self.continuity_manager.review(project)
+
+        if config.cache_assets:
+            self.asset_cache.register_project_assets(project)
 
     def _direct_scene(
         self,

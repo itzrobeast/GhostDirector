@@ -1,6 +1,6 @@
 from typing import List
 
-from pipeline import Pipeline
+from pipeline import Pipeline, PipelineRunConfig
 from project import Project
 from scene import Scene
 
@@ -15,6 +15,7 @@ class GhostDirector:
         self,
         project: Project,
         scene_length: int = 15,
+        run_config: PipelineRunConfig | None = None,
     ) -> List[Scene]:
 
         print("Analyzing project...")
@@ -26,6 +27,7 @@ class GhostDirector:
         scenes = self.pipeline.run(
             project,
             scene_length=scene_length,
+            config=run_config,
         )
 
         print(f"Created {len(scenes)} scenes")
@@ -39,6 +41,7 @@ class GhostDirector:
         character_image: str,
         style: str,
         scene_length: int = 15,
+        run_config: PipelineRunConfig | None = None,
     ) -> List[Scene]:
 
         project = Project(
@@ -57,6 +60,7 @@ class GhostDirector:
         return self.direct_project(
             project=project,
             scene_length=scene_length,
+            run_config=run_config,
         )
 
 
