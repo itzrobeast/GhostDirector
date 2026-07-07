@@ -12,6 +12,8 @@ class AssetCache:
                 asset_id = f"scene_{scene.scene_number:03d}_video"
                 assets[asset_id] = scene.rendered_video
 
+        project.assets = assets
+
         print(f"Asset Cache registered {len(assets)} rendered assets.")
 
         return assets

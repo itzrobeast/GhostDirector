@@ -17,4 +17,5 @@ class Project:
     scenes: List[Scene] = field(default_factory=list)
     timeline: Timeline = field(default_factory=Timeline)
     character_registry: CharacterRegistry = field(default_factory=CharacterRegistry)
+    assets: Dict[str, str] = field(default_factory=dict)
     rendered_video: Optional[str] = None

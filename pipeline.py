@@ -103,6 +103,9 @@ class Pipeline:
         if config.cache_assets:
             self.asset_cache.register_project_assets(project)
 
+        if config.export and (config.render or config.cache_assets):
+            Exporter.export(project, self.asset_manager)
+
     def _direct_scene(
         self,
         project: Project,
