@@ -53,19 +53,26 @@ class GhostDirector:
                 scene_type=scene_type,
             )
 
-            shot = self.camera_director.choose(emotion)
-
             scene.scene_type = scene_type
             scene.emotion = emotion
             scene.location = creative_direction["location"]
+            scene.environment = creative_direction["environment"]
             scene.lighting = creative_direction["lighting"]
             scene.weather = creative_direction["weather"]
             scene.time_of_day = creative_direction["time_of_day"]
+            scene.mood = creative_direction["mood"]
+            scene.dominant_color_palette = creative_direction[
+                "dominant_color_palette"
+            ]
+            scene.action = creative_direction["action"]
+            scene.expression = creative_direction["expression"]
+            scene.continuity_notes = creative_direction["continuity_notes"]
+
+            shot = self.camera_director.choose(emotion)
+
             scene.camera = shot["camera"]
             scene.lens = shot["lens"]
             scene.movement = shot["movement"]
-            scene.action = creative_direction["action"]
-            scene.expression = creative_direction["expression"]
             scene.prompt = self.prompt_builder.build(scene)
 
         print(f"Created {len(scenes)} scenes")

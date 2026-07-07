@@ -36,5 +36,11 @@ class Scene:
     continuity: bool
     use_last_frame: bool
 
+    # Creative Metadata
+    environment: str = ""
+    mood: str = ""
+    dominant_color_palette: str = ""
+    continuity_notes: str = ""
+
     # Final Output
     prompt: str = ""
