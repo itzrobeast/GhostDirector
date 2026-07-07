@@ -4,6 +4,7 @@ from scene import Scene
 from emotion import EmotionEngine
 from camera import CameraDirector
 from brain import DirectorBrain
+from continuity import ContinuityDirector
 from prompt_builder import PromptBuilder
 from project import Project
 from scene_planner import ScenePlanner
@@ -17,6 +18,7 @@ class GhostDirector:
         self.emotion_engine = EmotionEngine()
         self.camera_director = CameraDirector()
         self.director_brain = DirectorBrain()
+        self.continuity_director = ContinuityDirector()
         self.prompt_builder = PromptBuilder()
         self.scene_planner = ScenePlanner()
 
@@ -42,6 +44,7 @@ class GhostDirector:
             "default_scene_type",
             "unclassified",
         )
+        previous_scene = None
 
         for scene in scenes:
 
@@ -68,12 +71,19 @@ class GhostDirector:
             scene.expression = creative_direction["expression"]
             scene.continuity_notes = creative_direction["continuity_notes"]
 
+            self.continuity_director.maintain(
+                previous_scene,
+                scene,
+                project,
+            )
+
             shot = self.camera_director.choose(emotion)
 
             scene.camera = shot["camera"]
             scene.lens = shot["lens"]
             scene.movement = shot["movement"]
             scene.prompt = self.prompt_builder.build(scene)
+            previous_scene = scene
 
         print(f"Created {len(scenes)} scenes")
 
