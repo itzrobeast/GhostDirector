@@ -48,6 +48,18 @@ class GhostDirector:
     def load_project(self, path: str = "output/projects/project.json") -> Project:
         return ProjectLoader.load(path)
 
+    def rerender_project(
+        self,
+        scene_numbers: List[int] | None = None,
+        path: str = "output/projects/project.json",
+    ) -> List[str]:
+        project = self.load_project(path)
+        selected_scene_numbers = scene_numbers or [
+            scene.scene_number for scene in project.scenes
+        ]
+
+        return self.rerender_scenes(project, selected_scene_numbers)
+
     def analyze(
         self,
         song_path: str,
