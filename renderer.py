@@ -21,6 +21,7 @@ class Renderer:
             scene_workflow = self.workflow_builder.build(workflow, scene)
             print(f"Workflow built for Scene {scene.scene_number:03d}.")
             video_path = self.comfy_client.render(scene_workflow)
+            scene.rendered_video = video_path
             print(f"Scene {scene.scene_number:03d} rendered successfully.")
             return video_path
 

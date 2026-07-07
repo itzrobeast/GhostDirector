@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from scene import Scene
 
@@ -13,3 +13,4 @@ class Project:
     inputs: List[str] = field(default_factory=list)
     metadata: Dict[str, str] = field(default_factory=dict)
     scenes: List[Scene] = field(default_factory=list)
+    rendered_video: Optional[str] = None

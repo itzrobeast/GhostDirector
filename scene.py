@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import List
+from typing import List, Optional
 
 from character import Character
 
@@ -48,3 +48,4 @@ class Scene:
 
     # Final Output
     prompt: str = ""
+    rendered_video: Optional[str] = None
