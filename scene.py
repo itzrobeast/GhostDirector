@@ -50,5 +50,6 @@ class Scene:
     characters: List[Character] = field(default_factory=list)
 
     # Final Output
+    prompt_layers: Dict[str, str] = field(default_factory=dict)
     prompt: str = ""
     rendered_video: Optional[str] = None
