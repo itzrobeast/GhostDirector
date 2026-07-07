@@ -6,6 +6,7 @@ from camera import CameraDirector
 from brain import DirectorBrain
 from prompt_builder import PromptBuilder
 from project import Project
+from scene_planner import ScenePlanner
 
 
 class GhostDirector:
@@ -17,6 +18,7 @@ class GhostDirector:
         self.camera_director = CameraDirector()
         self.director_brain = DirectorBrain()
         self.prompt_builder = PromptBuilder()
+        self.scene_planner = ScenePlanner()
 
     def direct_project(
         self,
@@ -30,72 +32,41 @@ class GhostDirector:
         print(f"Style: {project.style}")
         print()
 
-        scenes = []
+        story = project.source_text
+        scenes = self.scene_planner.plan(
+            project,
+            story,
+            scene_length=scene_length,
+        )
+        default_scene_type = project.metadata.get(
+            "default_scene_type",
+            "unclassified",
+        )
 
-        source_lines = [
-            line.strip()
-            for line in project.source_text.split("\n")
-            if line.strip()
-        ]
+        for scene in scenes:
 
-        current_time = 0.0
-
-        for i, line in enumerate(source_lines):
-
-            emotion = self.emotion_engine.detect(line)
-            scene_type = "performance"
+            emotion = self.emotion_engine.detect(scene.lyrics)
+            scene_type = default_scene_type
             creative_direction = self.director_brain.think(
-                lyric=line,
+                lyric=scene.lyrics,
                 emotion=emotion,
                 scene_type=scene_type,
             )
 
             shot = self.camera_director.choose(emotion)
 
-            scene = Scene(
-
-                # Scene
-                scene_number=i + 1,
-
-                # Timing
-                start_time=current_time,
-                duration=scene_length,
-
-                # Source
-                lyrics=line,
-
-                # Story
-                scene_type=scene_type,
-                emotion=emotion,
-                energy="medium",
-
-                # Visuals
-                location=creative_direction["location"],
-                lighting=creative_direction["lighting"],
-                weather=creative_direction["weather"],
-                time_of_day=creative_direction["time_of_day"],
-
-                # Camera
-                camera=shot["camera"],
-                lens=shot["lens"],
-                movement=shot["movement"],
-
-                # Character
-                action=creative_direction["action"],
-                expression=creative_direction["expression"],
-
-                # Continuity
-                continuity=i > 0,
-                use_last_frame=i > 0,
-
-                # Prompt
-                prompt="",
-            )
-
+            scene.scene_type = scene_type
+            scene.emotion = emotion
+            scene.location = creative_direction["location"]
+            scene.lighting = creative_direction["lighting"]
+            scene.weather = creative_direction["weather"]
+            scene.time_of_day = creative_direction["time_of_day"]
+            scene.camera = shot["camera"]
+            scene.lens = shot["lens"]
+            scene.movement = shot["movement"]
+            scene.action = creative_direction["action"]
+            scene.expression = creative_direction["expression"]
             scene.prompt = self.prompt_builder.build(scene)
-            scenes.append(scene)
-
-            current_time += scene_length
 
         print(f"Created {len(scenes)} scenes")
 
@@ -119,6 +90,7 @@ class GhostDirector:
             metadata={
                 "song_path": song_path,
                 "character_image": character_image,
+                "default_scene_type": "performance",
             },
         )
 
