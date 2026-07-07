@@ -86,6 +86,10 @@ class GhostDirector:
             scene.characters = self._build_characters(
                 creative_direction["characters"]
             )
+            scene.character_ids = self._register_characters(
+                project,
+                scene.characters,
+            )
 
             self.continuity_director.maintain(
                 previous_scene,
@@ -145,6 +149,19 @@ class GhostDirector:
             Character(**character)
             for character in character_data
         ]
+
+    def _register_characters(
+        self,
+        project: Project,
+        characters: List[Character],
+    ) -> List[str]:
+        character_ids = []
+
+        for character in characters:
+            registered = project.character_registry.register(character)
+            character_ids.append(registered.id)
+
+        return character_ids
 
 
 if __name__ == "__main__":
