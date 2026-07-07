@@ -2,6 +2,7 @@ from typing import List
 
 from pipeline import Pipeline, PipelineRunConfig
 from project import Project
+from production_status import ProjectProductionStatus, ProductionStatus
 from project_loader import ProjectLoader
 from scene import Scene
 
@@ -59,6 +60,9 @@ class GhostDirector:
         ]
 
         return self.rerender_scenes(project, selected_scene_numbers)
+
+    def production_status(self, project: Project) -> ProjectProductionStatus:
+        return ProductionStatus().review(project)
 
     def analyze(
         self,
