@@ -1,6 +1,7 @@
 from typing import List
 
 from scene import Scene
+from asset_cache import AssetCache
 from emotion import EmotionEngine
 from camera import CameraDirector
 from brain import DirectorBrain
@@ -20,6 +21,7 @@ class GhostDirector:
     def __init__(self):
         print("Ghost Director Initialized")
 
+        self.asset_cache = AssetCache()
         self.emotion_engine = EmotionEngine()
         self.camera_director = CameraDirector()
         self.director_brain = DirectorBrain()
@@ -101,6 +103,7 @@ class GhostDirector:
         self.renderer.render(project)
         self.editor.prepare(project)
         self.continuity_manager.review(project)
+        self.asset_cache.register_project_assets(project)
 
         print(f"Created {len(scenes)} scenes")
 
