@@ -96,3 +96,54 @@ class ContinuityDirector:
         all_notes.extend(notes)
 
         return "; ".join(all_notes)
+
+
+class ContinuityEngine:
+    def generate_metadata(self, previous_scene, current_scene) -> dict:
+        metadata = {
+            "previous_location": self._previous_value(previous_scene, "location"),
+            "location": current_scene.location,
+            "lighting": current_scene.lighting,
+            "weather": current_scene.weather,
+            "time_of_day": current_scene.time_of_day,
+            "camera_direction": self._camera_direction(current_scene),
+            "character_positions": self._character_positions(current_scene),
+            "character_clothing": self._character_clothing(current_scene),
+            "props": self._props(current_scene),
+            "dominant_colors": current_scene.dominant_color_palette,
+        }
+
+        current_scene.continuity_metadata = metadata
+
+        return metadata
+
+    def _previous_value(self, previous_scene, field_name: str) -> str:
+        if previous_scene is None:
+            return ""
+
+        return getattr(previous_scene, field_name, "")
+
+    def _camera_direction(self, scene) -> dict:
+        return {
+            "camera": scene.camera,
+            "lens": scene.lens,
+            "movement": scene.movement,
+        }
+
+    def _character_positions(self, scene) -> dict:
+        return {
+            character.id: character.current_location
+            for character in scene.characters
+        }
+
+    def _character_clothing(self, scene) -> dict:
+        return {
+            character.id: character.clothing
+            for character in scene.characters
+        }
+
+    def _props(self, scene) -> dict:
+        return {
+            character.id: character.props
+            for character in scene.characters
+        }

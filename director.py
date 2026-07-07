@@ -7,7 +7,7 @@ from emotion import EmotionEngine
 from camera import CameraDirector
 from brain import DirectorBrain
 from character import Character
-from continuity import ContinuityDirector
+from continuity import ContinuityDirector, ContinuityEngine
 from continuity_manager import ContinuityManager
 from editor import Editor
 from exporter import Exporter
@@ -28,6 +28,7 @@ class GhostDirector:
         self.camera_director = CameraDirector()
         self.director_brain = DirectorBrain()
         self.continuity_director = ContinuityDirector()
+        self.continuity_engine = ContinuityEngine()
         self.continuity_manager = ContinuityManager()
         self.editor = Editor(self.asset_manager)
         self.prompt_builder = PromptBuilder()
@@ -97,6 +98,7 @@ class GhostDirector:
             scene.camera = shot["camera"]
             scene.lens = shot["lens"]
             scene.movement = shot["movement"]
+            self.continuity_engine.generate_metadata(previous_scene, scene)
             scene.prompt = self.prompt_builder.build(scene)
             previous_scene = scene
 
