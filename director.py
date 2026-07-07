@@ -3,6 +3,7 @@ from typing import List
 from pipeline import Pipeline, PipelineRunConfig
 from project import Project
 from production_status import ProjectProductionStatus, ProductionStatus
+from render_queue import RenderQueue, RenderQueueItem
 from project_loader import ProjectLoader
 from scene import Scene
 
@@ -63,6 +64,13 @@ class GhostDirector:
 
     def production_status(self, project: Project) -> ProjectProductionStatus:
         return ProductionStatus().review(project)
+
+    def render_queue(
+        self,
+        project: Project,
+        scene_numbers: List[int] | None = None,
+    ) -> List[RenderQueueItem]:
+        return RenderQueue().build(project, scene_numbers)
 
     def analyze(
         self,
