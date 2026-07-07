@@ -21,6 +21,7 @@ class DirectorBrain:
             "expression": emotion,
             "continuity_notes": "maintain visual continuity with the previous scene",
             "characters": [],
+            "directorial_beats": {},
         }
 
         # Performance
@@ -79,6 +80,7 @@ class DirectorBrain:
             decisions["expression"] = emotion
 
         self._apply_world_rules(text, decisions)
+        self._add_directorial_beats(text, emotion, decisions)
         self._add_default_character(decisions, emotion)
 
         return decisions
@@ -123,6 +125,45 @@ class DirectorBrain:
             decisions["time_of_day"] = "golden hour"
             decisions["lighting"] = "warm sunrise light"
             decisions["dominant_color_palette"] = "gold and soft blue"
+
+    def _add_directorial_beats(
+        self,
+        text: str,
+        emotion: str,
+        decisions: dict,
+    ) -> None:
+        beats = {
+            "camera_intent": "observe the scene with restrained cinematic focus",
+            "actor_direction": decisions["action"],
+            "lighting_shift": "hold lighting steady",
+            "atmosphere_change": "maintain atmosphere",
+            "music_intensity": "medium",
+            "cut_suggestion": "hold the shot",
+        }
+
+        if emotion in ["sad", "neutral"]:
+            beats["camera_intent"] = "slowly dolly closer to the character"
+            beats["music_intensity"] = "low"
+            beats["cut_suggestion"] = "linger before cutting"
+
+        if emotion in ["aggressive", "confident"]:
+            beats["camera_intent"] = "push in with stronger visual pressure"
+            beats["music_intensity"] = "high"
+            beats["cut_suggestion"] = "cut on movement"
+
+        if "rain" in text:
+            beats["atmosphere_change"] = "rain begins or continues through the scene"
+            beats["lighting_shift"] = "cool the lighting and soften contrast"
+
+        if "fire" in text:
+            beats["atmosphere_change"] = "heat shimmer and firelight intensify"
+            beats["lighting_shift"] = "shift warmer with flickering highlights"
+
+        if "stop" in text or "still" in text:
+            beats["actor_direction"] = "stop moving and hold emotional tension"
+            beats["cut_suggestion"] = "cut to close-up"
+
+        decisions["directorial_beats"] = beats
 
     def _add_default_character(
         self,

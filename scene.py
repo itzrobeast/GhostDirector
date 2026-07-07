@@ -46,6 +46,7 @@ class Scene:
     dominant_color_palette: str = ""
     continuity_notes: str = ""
     continuity_metadata: Dict[str, Any] = field(default_factory=dict)
+    directorial_beats: Dict[str, str] = field(default_factory=dict)
     character_ids: List[str] = field(default_factory=list)
     characters: List[Character] = field(default_factory=list)
 

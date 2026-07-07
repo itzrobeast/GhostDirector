@@ -100,6 +100,7 @@ class Pipeline:
         scene.action = creative_direction["action"]
         scene.expression = creative_direction["expression"]
         scene.continuity_notes = creative_direction["continuity_notes"]
+        scene.directorial_beats = creative_direction["directorial_beats"]
         scene.characters = self._build_characters(
             creative_direction["characters"]
         )
