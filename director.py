@@ -2,6 +2,7 @@ from typing import List
 
 from pipeline import Pipeline, PipelineRunConfig
 from project import Project
+from project_loader import ProjectLoader
 from scene import Scene
 
 
@@ -43,6 +44,9 @@ class GhostDirector:
             project,
             scene_numbers,
         )
+
+    def load_project(self, path: str = "output/projects/project.json") -> Project:
+        return ProjectLoader.load(path)
 
     def analyze(
         self,
