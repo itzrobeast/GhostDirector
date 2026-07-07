@@ -16,6 +16,7 @@ from prompt_builder import PromptBuilder
 from project import Project
 from renderer import Renderer
 from scene_planner import ScenePlanner
+from timeline import Timeline
 
 
 class GhostDirector:
@@ -113,6 +114,7 @@ class GhostDirector:
             previous_scene = scene
 
         project.scenes = scenes
+        project.timeline = Timeline.from_scenes(scenes)
         Exporter.export(project, self.asset_manager)
         self.renderer.render(project)
         self.editor.prepare(project)
