@@ -20,6 +20,7 @@ class Renderer:
 
         for scene in project.scenes[:1]:
             print(f"Rendering Scene {scene.scene_number:03d}")
+            print(f"Camera language: {scene.camera_language}")
             managed_video = self.asset_manager.get_scene_video(scene.scene_number)
             scene_workflow = self.workflow_builder.build(workflow, scene)
             print(f"Workflow built for Scene {scene.scene_number:03d}.")

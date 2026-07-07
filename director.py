@@ -5,6 +5,7 @@ from asset_cache import AssetCache
 from asset_manager import AssetManager
 from emotion import EmotionEngine
 from camera import CameraDirector
+from camera_language import CameraLanguage
 from brain import DirectorBrain
 from character import Character
 from continuity import ContinuityDirector, ContinuityEngine
@@ -26,6 +27,7 @@ class GhostDirector:
         self.asset_cache = AssetCache()
         self.emotion_engine = EmotionEngine()
         self.camera_director = CameraDirector()
+        self.camera_language = CameraLanguage()
         self.director_brain = DirectorBrain()
         self.continuity_director = ContinuityDirector()
         self.continuity_engine = ContinuityEngine()
@@ -102,6 +104,10 @@ class GhostDirector:
             scene.camera = shot["camera"]
             scene.lens = shot["lens"]
             scene.movement = shot["movement"]
+            scene.camera_language = self.camera_language.normalize(
+                scene.camera,
+                scene.movement,
+            )
             self.continuity_engine.generate_metadata(previous_scene, scene)
             scene.prompt = self.prompt_builder.build(scene)
             previous_scene = scene

@@ -30,6 +30,7 @@ class Scene:
     camera: str
     lens: str
     movement: str
+    camera_language: Dict[str, str] = field(default_factory=dict)
 
     # Character
     action: str
