@@ -2,6 +2,7 @@ from typing import List
 
 from scene import Scene
 from asset_cache import AssetCache
+from asset_manager import AssetManager
 from emotion import EmotionEngine
 from camera import CameraDirector
 from brain import DirectorBrain
@@ -21,15 +22,16 @@ class GhostDirector:
     def __init__(self):
         print("Ghost Director Initialized")
 
+        self.asset_manager = AssetManager()
         self.asset_cache = AssetCache()
         self.emotion_engine = EmotionEngine()
         self.camera_director = CameraDirector()
         self.director_brain = DirectorBrain()
         self.continuity_director = ContinuityDirector()
         self.continuity_manager = ContinuityManager()
-        self.editor = Editor()
+        self.editor = Editor(self.asset_manager)
         self.prompt_builder = PromptBuilder()
-        self.renderer = Renderer()
+        self.renderer = Renderer(self.asset_manager)
         self.scene_planner = ScenePlanner()
 
     def direct_project(
@@ -99,7 +101,7 @@ class GhostDirector:
             previous_scene = scene
 
         project.scenes = scenes
-        Exporter.export(project)
+        Exporter.export(project, self.asset_manager)
         self.renderer.render(project)
         self.editor.prepare(project)
         self.continuity_manager.review(project)

@@ -1,0 +1,37 @@
+from pathlib import Path
+
+
+class AssetManager:
+    def __init__(self, output_dir: str = "output"):
+        self.output_dir = Path(output_dir)
+        self.projects_dir = self.output_dir / "projects"
+        self.scenes_dir = self.output_dir / "scenes"
+        self.prompts_dir = self.output_dir / "prompts"
+        self.videos_dir = self.output_dir / "videos"
+        self.audio_dir = self.output_dir / "audio"
+        self.cache_dir = self.output_dir / "cache"
+        self.ensure_directories()
+
+    def ensure_directories(self) -> None:
+        for path in [
+            self.output_dir,
+            self.projects_dir,
+            self.scenes_dir,
+            self.prompts_dir,
+            self.videos_dir,
+            self.audio_dir,
+            self.cache_dir,
+        ]:
+            path.mkdir(parents=True, exist_ok=True)
+
+    def get_project_json(self) -> Path:
+        return self.projects_dir / "project.json"
+
+    def get_scene_video(self, scene_number: int) -> Path:
+        return self.videos_dir / f"scene_{scene_number:03d}.mp4"
+
+    def get_scene_prompt(self, scene_number: int) -> Path:
+        return self.prompts_dir / f"scene_{scene_number:03d}_prompt.txt"
+
+    def get_scene_json(self, scene_number: int) -> Path:
+        return self.scenes_dir / f"scene_{scene_number:03d}.json"

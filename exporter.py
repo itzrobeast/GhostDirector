@@ -1,24 +1,30 @@
 import json
 from dataclasses import asdict
 from pathlib import Path
+from typing import Optional
+
+from asset_manager import AssetManager
 
 
 class Exporter:
     @staticmethod
-    def export(project, output_dir: str = "output") -> None:
-        output_path = Path(output_dir)
-        scenes_path = output_path / "scenes"
-        prompts_path = output_path / "prompts"
+    def export(
+        project,
+        asset_manager: Optional[AssetManager] = None,
+    ) -> None:
+        assets = asset_manager or AssetManager()
 
-        scenes_path.mkdir(parents=True, exist_ok=True)
-        prompts_path.mkdir(parents=True, exist_ok=True)
-
-        Exporter._write_json(output_path / "project.json", asdict(project))
+        Exporter._write_json(assets.get_project_json(), asdict(project))
 
         for scene in project.scenes:
-            scene_name = f"scene_{scene.scene_number:03d}"
-            Exporter._write_json(scenes_path / f"{scene_name}.json", asdict(scene))
-            Exporter._write_text(prompts_path / f"{scene_name}_prompt.txt", scene.prompt)
+            Exporter._write_json(
+                assets.get_scene_json(scene.scene_number),
+                asdict(scene),
+            )
+            Exporter._write_text(
+                assets.get_scene_prompt(scene.scene_number),
+                scene.prompt,
+            )
 
     @staticmethod
     def _write_json(path: Path, data: dict) -> None:
