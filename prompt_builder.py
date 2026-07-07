@@ -13,6 +13,7 @@ class PromptBuilder:
         return {
             "character": self._character_layer(scene),
             "environment": self._environment_layer(scene),
+            "direction": self._direction_layer(scene),
             "lighting": self._lighting_layer(scene),
             "camera": self._camera_layer(scene),
             "emotion": self._emotion_layer(scene),
@@ -27,6 +28,7 @@ class PromptBuilder:
         ordered_layers = [
             "character",
             "environment",
+            "direction",
             "camera",
             "lighting",
             "emotion",
@@ -62,6 +64,19 @@ class PromptBuilder:
             f"Environment Type: {scene.environment}",
             f"Weather: {scene.weather}",
             f"Time of Day: {scene.time_of_day}",
+        ])
+
+    def _direction_layer(self, scene: Scene) -> str:
+        beats = scene.directorial_beats
+
+        return "\n".join([
+            "Direction:",
+            f"Camera Intent: {beats.get('camera_intent', '')}",
+            f"Actor Direction: {beats.get('actor_direction', scene.action)}",
+            f"Lighting Shift: {beats.get('lighting_shift', '')}",
+            f"Atmosphere Change: {beats.get('atmosphere_change', '')}",
+            f"Music Intensity: {beats.get('music_intensity', '')}",
+            f"Cut Suggestion: {beats.get('cut_suggestion', '')}",
         ])
 
     def _lighting_layer(self, scene: Scene) -> str:
