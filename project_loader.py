@@ -1,7 +1,8 @@
 import json
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
+from asset_manager import AssetManager
 from character import Character, CharacterRegistry
 from edit_decision import EditDecision
 from project import Project
@@ -13,8 +14,13 @@ class ProjectLoader:
     """Rebuilds a Project from Ghost Director's exported JSON manifest."""
 
     @staticmethod
-    def load(path: str = "output/projects/project.json") -> Project:
-        data = json.loads(Path(path).read_text(encoding="utf-8"))
+    def load(
+        path: Optional[str] = None,
+        asset_manager: Optional[AssetManager] = None,
+    ) -> Project:
+        assets = asset_manager or AssetManager()
+        manifest_path = Path(path) if path else assets.get_project_json()
+        data = json.loads(manifest_path.read_text(encoding="utf-8"))
         scenes = ProjectLoader._scenes(data.get("scenes", []))
 
         project = Project(

@@ -45,13 +45,13 @@ class GhostDirector:
             scene_numbers,
         )
 
-    def load_project(self, path: str = "output/projects/project.json") -> Project:
+    def load_project(self, path: str | None = None) -> Project:
         return ProjectLoader.load(path)
 
     def rerender_project(
         self,
         scene_numbers: List[int] | None = None,
-        path: str = "output/projects/project.json",
+        path: str | None = None,
     ) -> List[str]:
         project = self.load_project(path)
         selected_scene_numbers = scene_numbers or [
