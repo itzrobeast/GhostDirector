@@ -1,4 +1,7 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from typing import List
+
+from character import Character
 
 
 @dataclass
@@ -41,6 +44,7 @@ class Scene:
     mood: str = ""
     dominant_color_palette: str = ""
     continuity_notes: str = ""
+    characters: List[Character] = field(default_factory=list)
 
     # Final Output
     prompt: str = ""

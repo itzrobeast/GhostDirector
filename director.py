@@ -4,6 +4,7 @@ from scene import Scene
 from emotion import EmotionEngine
 from camera import CameraDirector
 from brain import DirectorBrain
+from character import Character
 from continuity import ContinuityDirector
 from prompt_builder import PromptBuilder
 from project import Project
@@ -70,6 +71,9 @@ class GhostDirector:
             scene.action = creative_direction["action"]
             scene.expression = creative_direction["expression"]
             scene.continuity_notes = creative_direction["continuity_notes"]
+            scene.characters = self._build_characters(
+                creative_direction["characters"]
+            )
 
             self.continuity_director.maintain(
                 previous_scene,
@@ -115,6 +119,12 @@ class GhostDirector:
             project=project,
             scene_length=scene_length,
         )
+
+    def _build_characters(self, character_data) -> List[Character]:
+        return [
+            Character(**character)
+            for character in character_data
+        ]
 
 
 if __name__ == "__main__":

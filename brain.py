@@ -20,6 +20,7 @@ class DirectorBrain:
             "action": "existing in the moment",
             "expression": emotion,
             "continuity_notes": "maintain visual continuity with the previous scene",
+            "characters": [],
         }
 
         # Performance
@@ -78,6 +79,7 @@ class DirectorBrain:
             decisions["expression"] = emotion
 
         self._apply_world_rules(text, decisions)
+        self._add_default_character(decisions, emotion)
 
         return decisions
 
@@ -121,3 +123,20 @@ class DirectorBrain:
             decisions["time_of_day"] = "golden hour"
             decisions["lighting"] = "warm sunrise light"
             decisions["dominant_color_palette"] = "gold and soft blue"
+
+    def _add_default_character(
+        self,
+        decisions: dict,
+        emotion: str,
+    ) -> None:
+
+        decisions["characters"] = [
+            {
+                "id": "character_1",
+                "name": "",
+                "description": "default scene character",
+                "facial_expression": decisions["expression"],
+                "emotional_state": emotion,
+                "current_location": decisions["location"],
+            }
+        ]
