@@ -1,6 +1,8 @@
 from dataclasses import dataclass, field
 from typing import Dict, List
 
+from scene import Scene
+
 
 @dataclass
 class Project:
@@ -10,3 +12,4 @@ class Project:
     style: str
     inputs: List[str] = field(default_factory=list)
     metadata: Dict[str, str] = field(default_factory=dict)
+    scenes: List[Scene] = field(default_factory=list)
