@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import List, Optional
 
 from asset_cache import AssetCache
@@ -27,6 +27,7 @@ class PipelineRunConfig:
     edit: bool = True
     continuity_review: bool = True
     cache_assets: bool = True
+    render_scene_numbers: List[int] = field(default_factory=list)
 
 
 class Pipeline:
@@ -88,7 +89,10 @@ class Pipeline:
             Exporter.export(project, self.asset_manager)
 
         if config.render:
-            self.renderer.render(project)
+            self.renderer.render(
+                project,
+                scene_numbers=config.render_scene_numbers,
+            )
 
         if config.edit:
             self.editor.prepare(project)
