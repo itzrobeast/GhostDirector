@@ -6,6 +6,7 @@ from camera import CameraDirector
 from brain import DirectorBrain
 from character import Character
 from continuity import ContinuityDirector
+from continuity_manager import ContinuityManager
 from editor import Editor
 from exporter import Exporter
 from prompt_builder import PromptBuilder
@@ -23,6 +24,7 @@ class GhostDirector:
         self.camera_director = CameraDirector()
         self.director_brain = DirectorBrain()
         self.continuity_director = ContinuityDirector()
+        self.continuity_manager = ContinuityManager()
         self.editor = Editor()
         self.prompt_builder = PromptBuilder()
         self.renderer = Renderer()
@@ -98,6 +100,7 @@ class GhostDirector:
         Exporter.export(project)
         self.renderer.render(project)
         self.editor.prepare(project)
+        self.continuity_manager.review(project)
 
         print(f"Created {len(scenes)} scenes")
 
