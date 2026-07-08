@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import {
   FiArchive,
@@ -24,7 +25,7 @@ import {
   FiVideo,
   FiZap
 } from "react-icons/fi";
-import type { ProjectInput } from "@/lib/api";
+import { createProject, type ProjectInput } from "@/lib/api";
 
 const navItems = [
   [FiFolder, "Projects"],
@@ -110,6 +111,32 @@ const sampleInput: ProjectInput = {
 };
 
 export default function StudioHome() {
+  const [projectTitle, setProjectTitle] = useState(sampleInput.title);
+  const [sourceText, setSourceText] = useState(sampleInput.source_text);
+  const [isDirecting, setIsDirecting] = useState(false);
+  const [statusMessage, setStatusMessage] = useState("Ready to direct.");
+
+  async function handleDirectFilm() {
+    setIsDirecting(true);
+    setStatusMessage("Sending project to Ghost Director...");
+
+    try {
+      const result = await createProject({
+        ...sampleInput,
+        title: projectTitle,
+        source_text: sourceText || "A cinematic story begins in a city at sunrise."
+      });
+      setStatusMessage(
+        `Created ${result.scene_count} scenes. Project status: ${result.production_status.status}.`
+      );
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unknown error";
+      setStatusMessage(message);
+    } finally {
+      setIsDirecting(false);
+    }
+  }
+
   return (
     <main className="min-h-screen bg-obsidian text-white">
       <div className="flex min-h-screen">
@@ -144,9 +171,9 @@ export default function StudioHome() {
                 <h2 className="text-4xl font-semibold tracking-tight md:text-6xl">Ghost Director Studio</h2>
                 <p className="mt-3 max-w-2xl text-lg text-white/65">Create complete cinematic productions from a single idea.</p>
               </div>
-              <button className="inline-flex h-14 items-center justify-center gap-3 rounded bg-ember px-6 font-semibold text-white shadow-studio transition hover:bg-orange-500">
+              <button className="inline-flex h-14 items-center justify-center gap-3 rounded bg-ember px-6 font-semibold text-white shadow-studio transition hover:bg-orange-500 disabled:cursor-not-allowed disabled:opacity-60" disabled={isDirecting} onClick={handleDirectFilm}>
                 <FiPlay size={20} />
-                Direct My Film
+                {isDirecting ? "Directing..." : "Direct My Film"}
               </button>
             </header>
 
@@ -162,13 +189,13 @@ export default function StudioHome() {
                     <h3 className="text-xl font-semibold">New Project</h3>
                     <p className="text-sm text-white/50">Structured project input for the Ghost Director engine.</p>
                   </div>
-                  <span className="rounded bg-cyan/15 px-3 py-1 text-xs text-cyan">Backend ready</span>
+                  <span className="rounded bg-cyan/15 px-3 py-1 text-xs text-cyan">{statusMessage}</span>
                 </div>
 
                 <div className="grid gap-4 md:grid-cols-2">
                   <label className="space-y-2">
                     <span className="text-sm text-white/60">Project Name</span>
-                    <input className="h-12 w-full rounded border border-stroke bg-panelSoft px-4 outline-none transition focus:border-ember" defaultValue={sampleInput.title} />
+                    <input className="h-12 w-full rounded border border-stroke bg-panelSoft px-4 outline-none transition focus:border-ember" onChange={(event) => setProjectTitle(event.target.value)} value={projectTitle} />
                   </label>
                   <label className="space-y-2">
                     <span className="text-sm text-white/60">Project Type</span>
