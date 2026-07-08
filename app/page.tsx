@@ -94,18 +94,19 @@ const scenes = [
 
 const sampleInput: ProjectInput = {
   title: "Untitled Production",
-  projectType: "Movie",
-  sourceText: "",
+  project_type: "Movie",
+  source_text: "",
   style: "Cinematic Realism",
-  cameraStyle: "Hollywood",
+  camera_style: "Hollywood",
   renderer: "Seedance",
   resolution: "1920x1080",
   fps: 24,
-  aspectRatio: "16:9",
-  targetDuration: 90,
+  aspect_ratio: "16:9",
+  target_duration: 90,
   quality: "High",
-  negativePrompt: "low quality, flicker, distorted faces",
-  files: []
+  negative_prompt: "low quality, flicker, distorted faces",
+  files: [],
+  render: false
 };
 
 export default function StudioHome() {
@@ -172,7 +173,7 @@ export default function StudioHome() {
                   <label className="space-y-2">
                     <span className="text-sm text-white/60">Project Type</span>
                     <div className="relative">
-                      <select className="h-12 w-full appearance-none rounded border border-stroke bg-panelSoft px-4 outline-none transition focus:border-ember" defaultValue={sampleInput.projectType}>
+                      <select className="h-12 w-full appearance-none rounded border border-stroke bg-panelSoft px-4 outline-none transition focus:border-ember" defaultValue={sampleInput.project_type}>
                         {projectTypes.map((type) => <option key={type}>{type}</option>)}
                       </select>
                       <FiChevronDown className="pointer-events-none absolute right-4 top-4 text-white/50" />

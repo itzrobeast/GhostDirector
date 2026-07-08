@@ -1,18 +1,19 @@
 export type ProjectInput = {
   title: string;
-  projectType: string;
-  sourceText: string;
+  project_type: string;
+  source_text: string;
   style: string;
-  cameraStyle: string;
+  camera_style: string;
   renderer: string;
   resolution: string;
   fps: number;
-  aspectRatio: string;
-  targetDuration: number;
+  aspect_ratio: string;
+  target_duration: number;
   quality: string;
   seed?: number;
-  negativePrompt: string;
+  negative_prompt: string;
   files: string[];
+  render: boolean;
 };
 
 export type PipelineStage = {

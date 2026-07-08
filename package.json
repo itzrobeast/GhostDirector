@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "api": "uvicorn studio_api:app --reload",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
