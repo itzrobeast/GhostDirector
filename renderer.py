@@ -1,38 +1,39 @@
 from typing import List, Optional
 
 from asset_manager import AssetManager
-from comfy_client import ComfyClient
+from base_renderer import BaseRenderer
+from comfy_renderer import SeedanceRenderer
 from project import Project
+from render_types import RenderSettings
 from scene import Scene
-from workflow import WorkflowLoader
-from workflow_builder import WorkflowBuilder
 
 
 class Renderer:
-    def __init__(self, asset_manager: Optional[AssetManager] = None):
+    """Coordinates scene rendering through an interchangeable renderer plugin."""
+
+    def __init__(
+        self,
+        asset_manager: Optional[AssetManager] = None,
+        backend: Optional[BaseRenderer] = None,
+    ):
         self.asset_manager = asset_manager or AssetManager()
-        self.workflow_loader = WorkflowLoader()
-        self.workflow_builder = WorkflowBuilder()
-        self.comfy_client = ComfyClient()
+        self.backend = backend or SeedanceRenderer(self.asset_manager)
 
     def render(
         self,
         project: Project,
         scene_numbers: Optional[List[int]] = None,
     ) -> List[str]:
-        workflow = self.workflow_loader.load()
-        print("Loaded Seedance workflow successfully.")
         rendered_videos = []
 
         for scene in self._selected_scenes(project, scene_numbers):
             print(f"Rendering Scene {scene.scene_number:03d}")
+            print(f"Renderer: {self.backend.name}")
             print(f"Camera language: {scene.camera_language}")
-            managed_video = self.asset_manager.get_scene_video(scene.scene_number)
-            scene_workflow = self.workflow_builder.build(workflow, scene)
-            print(f"Workflow built for Scene {scene.scene_number:03d}.")
-            video_path = self.comfy_client.render(scene_workflow)
-            scene.rendered_video = video_path or str(managed_video)
-            rendered_videos.append(scene.rendered_video)
+            settings = self._settings_for_scene(scene)
+            result = self.backend.render_scene(project, scene, settings)
+            scene.rendered_video = result.video_path
+            rendered_videos.append(result.video_path)
             print(f"Scene {scene.scene_number:03d} rendered successfully.")
 
         return rendered_videos
@@ -51,3 +52,17 @@ class Renderer:
             ]
 
         return project.scenes[:1]
+
+    def _settings_for_scene(self, scene: Scene) -> RenderSettings:
+        return RenderSettings(
+            duration=scene.duration,
+            output_filename=str(
+                self.asset_manager.get_scene_video(scene.scene_number)
+            ),
+            negative_prompt=scene.prompt_layers.get("negative_prompt", ""),
+            metadata={
+                "camera": scene.camera_language,
+                "continuity": scene.continuity_metadata,
+                "scene_number": scene.scene_number,
+            },
+        )
