@@ -4,6 +4,7 @@ from typing import List, Optional
 from asset_manager import AssetManager
 from base_renderer import BaseRenderer
 from comfy_renderer import SeedanceRenderer
+from config import DEFAULT_CONFIG
 from project import Project
 from render_status import COMPLETE, FAILED, RENDERING
 from render_types import RenderSettings
@@ -18,9 +19,13 @@ class Renderer:
         self,
         asset_manager: Optional[AssetManager] = None,
         backend: Optional[BaseRenderer] = None,
+        max_retries: Optional[int] = None,
     ):
         self.asset_manager = asset_manager or AssetManager()
         self.backend = backend or SeedanceRenderer(self.asset_manager)
+        self.max_retries = max_retries if max_retries is not None else (
+            DEFAULT_CONFIG.render.max_retries
+        )
 
     def render(
         self,
@@ -30,47 +35,79 @@ class Renderer:
         rendered_videos = []
 
         for scene in self._selected_scenes(project, scene_numbers):
-            started_at = time.time()
-            logger.info(
-                "render_scene_started",
-                renderer=self.backend.name,
-                scene_number=scene.scene_number,
-            )
-            scene.render_status = RENDERING
-            scene.render_progress = 0.0
-            scene.render_error = ""
-            scene.render_attempts += 1
+            video_path = self._render_scene_with_recovery(project, scene)
+            if video_path:
+                rendered_videos.append(video_path)
 
+        return rendered_videos
+
+    def _render_scene_with_recovery(
+        self,
+        project: Project,
+        scene: Scene,
+    ) -> str:
+        started_at = time.time()
+        logger.info(
+            "render_scene_started",
+            renderer=self.backend.name,
+            scene_number=scene.scene_number,
+        )
+        scene.render_status = RENDERING
+        scene.render_progress = 0.0
+        scene.render_error = ""
+
+        for attempt in range(1, self.max_retries + 2):
+            scene.render_attempts += 1
             try:
-                settings = self._settings_for_scene(scene)
-                result = self.backend.render_scene(project, scene, settings)
-                managed_video = self.asset_manager.normalize_scene_video(
-                    scene.scene_number,
-                    result.video_path,
-                )
-                scene.rendered_video = managed_video
-                scene.render_status = COMPLETE
-                scene.render_progress = 1.0
-                rendered_videos.append(managed_video)
-                logger.info(
-                    "render_scene_finished",
-                    elapsed_seconds=round(time.time() - started_at, 3),
-                    scene_number=scene.scene_number,
-                    video_path=managed_video,
-                )
+                return self._render_scene(project, scene, started_at, attempt)
             except Exception as exc:
-                scene.render_status = FAILED
                 scene.render_error = str(exc)
-                scene.render_progress = 0.0
-                logger.error(
-                    "render_scene_failed",
-                    elapsed_seconds=round(time.time() - started_at, 3),
+                logger.warning(
+                    "render_scene_attempt_failed",
+                    attempt=attempt,
                     error=str(exc),
                     scene_number=scene.scene_number,
                 )
-                raise
 
-        return rendered_videos
+        scene.render_status = FAILED
+        scene.render_progress = 0.0
+        logger.error(
+            "render_scene_failed",
+            elapsed_seconds=round(time.time() - started_at, 3),
+            error=scene.render_error,
+            scene_number=scene.scene_number,
+        )
+        return ""
+
+    def _render_scene(
+        self,
+        project: Project,
+        scene: Scene,
+        started_at: float,
+        attempt: int,
+    ) -> str:
+        logger.info(
+            "render_scene_attempt_started",
+            attempt=attempt,
+            scene_number=scene.scene_number,
+        )
+        settings = self._settings_for_scene(scene)
+        result = self.backend.render_scene(project, scene, settings)
+        managed_video = self.asset_manager.normalize_scene_video(
+            scene.scene_number,
+            result.video_path,
+        )
+        scene.rendered_video = managed_video
+        scene.render_status = COMPLETE
+        scene.render_progress = 1.0
+        logger.info(
+            "render_scene_finished",
+            attempt=attempt,
+            elapsed_seconds=round(time.time() - started_at, 3),
+            scene_number=scene.scene_number,
+            video_path=managed_video,
+        )
+        return managed_video
 
     def _selected_scenes(
         self,

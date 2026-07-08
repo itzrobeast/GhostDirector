@@ -7,6 +7,7 @@ class RenderDefaults:
     height: int = 720
     fps: int = 24
     duration: float = 5.0
+    max_retries: int = 1
 
 
 @dataclass(frozen=True)
