@@ -34,7 +34,7 @@ class ComfyRenderer(BaseRenderer):
         settings: RenderSettings,
     ) -> RenderResult:
         workflow = self.workflow_loader.load()
-        scene_workflow = self.workflow_builder.build(workflow, scene)
+        scene_workflow = self.workflow_builder.build(workflow, scene, settings)
         video_path = self.comfy_client.render(scene_workflow)
 
         return RenderResult(
