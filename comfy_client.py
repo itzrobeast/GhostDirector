@@ -4,12 +4,16 @@ from pathlib import Path
 from typing import Any, Dict, Optional
 from urllib import request
 
+from comfy_health import ComfyHealthCheck
+
 
 class ComfyClient:
     def __init__(self, base_url: str = "http://127.0.0.1:8188"):
         self.base_url = base_url.rstrip("/")
+        self.health_check = ComfyHealthCheck(self.base_url)
 
     def render(self, workflow: Dict[str, Any]) -> str:
+        self.health_check.require_ready()
         prompt_id = self.submit(workflow)
         return self.wait_for_completion(prompt_id)
 
