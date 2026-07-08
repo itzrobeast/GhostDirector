@@ -1,10 +1,13 @@
 from pathlib import Path
+from typing import Optional
+
+from config import DEFAULT_CONFIG
 from shutil import copy2
 
 
 class AssetManager:
-    def __init__(self, output_dir: str = "output"):
-        self.output_dir = Path(output_dir)
+    def __init__(self, output_dir: Optional[str] = None):
+        self.output_dir = Path(output_dir or DEFAULT_CONFIG.output_dir)
         self.projects_dir = self.output_dir / "projects"
         self.scenes_dir = self.output_dir / "scenes"
         self.prompts_dir = self.output_dir / "prompts"

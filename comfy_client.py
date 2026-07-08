@@ -5,12 +5,34 @@ from typing import Any, Dict, Optional
 from urllib import request
 
 from comfy_health import ComfyHealthCheck
+from config import DEFAULT_CONFIG
 
 
 class ComfyClient:
-    def __init__(self, base_url: str = "http://127.0.0.1:8188"):
-        self.base_url = base_url.rstrip("/")
-        self.health_check = ComfyHealthCheck(self.base_url)
+    def __init__(
+        self,
+        base_url: Optional[str] = None,
+        request_timeout_seconds: Optional[int] = None,
+        render_timeout_seconds: Optional[int] = None,
+        poll_interval_seconds: Optional[int] = None,
+    ):
+        self.base_url = (base_url or DEFAULT_CONFIG.comfy.base_url).rstrip("/")
+        self.request_timeout_seconds = (
+            request_timeout_seconds
+            or DEFAULT_CONFIG.comfy.request_timeout_seconds
+        )
+        self.render_timeout_seconds = (
+            render_timeout_seconds
+            or DEFAULT_CONFIG.comfy.render_timeout_seconds
+        )
+        self.poll_interval_seconds = (
+            poll_interval_seconds
+            or DEFAULT_CONFIG.comfy.poll_interval_seconds
+        )
+        self.health_check = ComfyHealthCheck(
+            self.base_url,
+            DEFAULT_CONFIG.comfy.health_timeout_seconds,
+        )
 
     def render(self, workflow: Dict[str, Any]) -> str:
         self.health_check.require_ready()
@@ -26,7 +48,10 @@ class ComfyClient:
             method="POST",
         )
 
-        with request.urlopen(req, timeout=30) as response:
+        with request.urlopen(
+            req,
+            timeout=self.request_timeout_seconds,
+        ) as response:
             data = json.loads(response.read().decode("utf-8"))
 
         prompt_id = data.get("prompt_id")
@@ -39,10 +64,12 @@ class ComfyClient:
     def wait_for_completion(
         self,
         prompt_id: str,
-        timeout_seconds: int = 600,
-        poll_interval: int = 2,
+        timeout_seconds: Optional[int] = None,
+        poll_interval: Optional[int] = None,
     ) -> str:
-        deadline = time.time() + timeout_seconds
+        timeout = timeout_seconds or self.render_timeout_seconds
+        interval = poll_interval or self.poll_interval_seconds
+        deadline = time.time() + timeout
 
         while time.time() < deadline:
             history = self._get_history(prompt_id)
@@ -51,14 +78,14 @@ class ComfyClient:
             if output_path:
                 return output_path
 
-            time.sleep(poll_interval)
+            time.sleep(interval)
 
         raise TimeoutError(f"Timed out waiting for ComfyUI prompt {prompt_id}.")
 
     def _get_history(self, prompt_id: str) -> Dict[str, Any]:
         with request.urlopen(
             f"{self.base_url}/history/{prompt_id}",
-            timeout=30,
+            timeout=self.request_timeout_seconds,
         ) as response:
             return json.loads(response.read().decode("utf-8"))
 
@@ -85,6 +112,8 @@ class ComfyClient:
                 filename = output.get("filename")
                 if filename:
                     subfolder = output.get("subfolder", "")
-                    return str(Path("output") / subfolder / filename)
+                    return str(
+                        Path(DEFAULT_CONFIG.output_dir) / subfolder / filename
+                    )
 
         return None

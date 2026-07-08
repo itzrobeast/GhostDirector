@@ -1,13 +1,15 @@
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
+from config import DEFAULT_CONFIG
+
 
 @dataclass
 class RenderSettings:
-    width: int = 1280
-    height: int = 720
-    duration: float = 5.0
-    fps: int = 24
+    width: int = DEFAULT_CONFIG.render.width
+    height: int = DEFAULT_CONFIG.render.height
+    duration: float = DEFAULT_CONFIG.render.duration
+    fps: int = DEFAULT_CONFIG.render.fps
     seed: Optional[int] = None
     output_filename: str = ""
     negative_prompt: str = ""
