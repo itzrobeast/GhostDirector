@@ -1,8 +1,8 @@
 from pathlib import Path
+from shutil import copy2
 from typing import Optional
 
 from config import DEFAULT_CONFIG
-from shutil import copy2
 
 
 class AssetManager:
@@ -33,6 +33,9 @@ class AssetManager:
 
     def get_production_status_json(self) -> Path:
         return self.projects_dir / "production_status.json"
+
+    def get_render_queue_json(self) -> Path:
+        return self.projects_dir / "render_queue.json"
 
     def get_edit_decision_list_json(self) -> Path:
         return self.projects_dir / "edit_decision_list.json"

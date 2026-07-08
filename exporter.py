@@ -5,6 +5,7 @@ from typing import Optional
 
 from asset_manager import AssetManager
 from production_status import ProductionStatus
+from render_queue import RenderQueue
 
 
 class Exporter:
@@ -19,6 +20,10 @@ class Exporter:
         Exporter._write_json(
             assets.get_production_status_json(),
             asdict(ProductionStatus().review(project)),
+        )
+        Exporter._write_json(
+            assets.get_render_queue_json(),
+            [asdict(item) for item in RenderQueue().build(project)],
         )
 
         for scene in project.scenes:
