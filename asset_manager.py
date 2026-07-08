@@ -31,6 +31,15 @@ class AssetManager:
     def get_production_status_json(self) -> Path:
         return self.projects_dir / "production_status.json"
 
+    def get_edit_decision_list_json(self) -> Path:
+        return self.projects_dir / "edit_decision_list.json"
+
+    def get_timeline_json(self) -> Path:
+        return self.projects_dir / "timeline.json"
+
+    def get_final_movie(self) -> Path:
+        return self.videos_dir / "final_movie.mp4"
+
     def get_scene_video(self, scene_number: int) -> Path:
         return self.videos_dir / f"scene_{scene_number:03d}.mp4"
 
@@ -60,3 +69,18 @@ class AssetManager:
         copy2(source_path, managed_video)
 
         return str(managed_video)
+
+    def normalize_final_movie(self, source_video: str) -> str:
+        final_movie = self.get_final_movie()
+        source_path = Path(source_video)
+
+        if not source_video or not source_path.exists():
+            return ""
+
+        if source_path.resolve() == final_movie.resolve():
+            return str(final_movie)
+
+        final_movie.parent.mkdir(parents=True, exist_ok=True)
+        copy2(source_path, final_movie)
+
+        return str(final_movie)

@@ -1,3 +1,5 @@
+import json
+from dataclasses import asdict
 from typing import List, Optional
 
 from asset_manager import AssetManager
@@ -13,7 +15,7 @@ class Editor:
         rendered_videos = []
         edit_decisions = []
 
-        for scene in project.scenes:
+        for scene in self._timeline_sorted_scenes(project):
             video_path = self._video_path(scene)
             if not video_path:
                 continue
@@ -22,10 +24,26 @@ class Editor:
             edit_decisions.append(self._edit_decision(project, scene, video_path))
 
         project.edit_decisions = edit_decisions
+        project.rendered_video = self._assemble_final_movie(rendered_videos)
+        self._export_edit_metadata(project)
 
         print(f"Editor collected {len(rendered_videos)} rendered scene videos.")
 
         return rendered_videos
+
+    def _timeline_sorted_scenes(self, project: Project):
+        timeline_order = {
+            entry.scene_number: entry.start_time
+            for entry in project.timeline.entries
+        }
+
+        return sorted(
+            project.scenes,
+            key=lambda scene: timeline_order.get(
+                scene.scene_number,
+                scene.start_time,
+            ),
+        )
 
     def _video_path(self, scene) -> str:
         if scene.rendered_video:
@@ -63,3 +81,25 @@ class Editor:
                 return entry
 
         return None
+
+    def _assemble_final_movie(self, rendered_videos: List[str]) -> str:
+        if len(rendered_videos) != 1:
+            return ""
+
+        return self.asset_manager.normalize_final_movie(rendered_videos[0])
+
+    def _export_edit_metadata(self, project: Project) -> None:
+        self._write_json(
+            self.asset_manager.get_edit_decision_list_json(),
+            [asdict(decision) for decision in project.edit_decisions],
+        )
+        self._write_json(
+            self.asset_manager.get_timeline_json(),
+            asdict(project.timeline),
+        )
+
+    def _write_json(self, path, data) -> None:
+        path.write_text(
+            json.dumps(data, indent=2),
+            encoding="utf-8",
+        )
