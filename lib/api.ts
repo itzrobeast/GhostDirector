@@ -22,8 +22,10 @@ export type PipelineStage = {
   status: "waiting" | "active" | "complete";
 };
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_GHOST_DIRECTOR_API ?? "http://127.0.0.1:8001";
+
 export async function createProject(input: ProjectInput) {
-  const response = await fetch("/api/projects", {
+  const response = await fetch(`${API_BASE_URL}/projects`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(input)
