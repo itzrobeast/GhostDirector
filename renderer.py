@@ -32,8 +32,12 @@ class Renderer:
             print(f"Camera language: {scene.camera_language}")
             settings = self._settings_for_scene(scene)
             result = self.backend.render_scene(project, scene, settings)
-            scene.rendered_video = result.video_path
-            rendered_videos.append(result.video_path)
+            managed_video = self.asset_manager.normalize_scene_video(
+                scene.scene_number,
+                result.video_path,
+            )
+            scene.rendered_video = managed_video
+            rendered_videos.append(managed_video)
             print(f"Scene {scene.scene_number:03d} rendered successfully.")
 
         return rendered_videos

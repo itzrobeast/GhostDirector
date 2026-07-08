@@ -1,4 +1,5 @@
 from pathlib import Path
+from shutil import copy2
 
 
 class AssetManager:
@@ -38,3 +39,24 @@ class AssetManager:
 
     def get_scene_json(self, scene_number: int) -> Path:
         return self.scenes_dir / f"scene_{scene_number:03d}.json"
+
+    def normalize_scene_video(
+        self,
+        scene_number: int,
+        source_video: str,
+    ) -> str:
+        managed_video = self.get_scene_video(scene_number)
+        if not source_video:
+            return str(managed_video)
+
+        source_path = Path(source_video)
+        if not source_path.exists():
+            return str(managed_video)
+
+        if source_path.resolve() == managed_video.resolve():
+            return str(managed_video)
+
+        managed_video.parent.mkdir(parents=True, exist_ok=True)
+        copy2(source_path, managed_video)
+
+        return str(managed_video)
