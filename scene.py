@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
 from character import Character
+from render_status import NOT_STARTED
 
 
 @dataclass
@@ -49,6 +50,13 @@ class Scene:
     directorial_beats: Dict[str, str] = field(default_factory=dict)
     character_ids: List[str] = field(default_factory=list)
     characters: List[Character] = field(default_factory=list)
+
+    # Rendering
+    render_status: str = NOT_STARTED
+    render_progress: float = 0.0
+    render_error: str = ""
+    render_attempts: int = 0
+    estimated_render_seconds: Optional[int] = None
 
     # Final Output
     prompt_layers: Dict[str, str] = field(default_factory=dict)

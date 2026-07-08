@@ -4,6 +4,7 @@ from asset_manager import AssetManager
 from base_renderer import BaseRenderer
 from comfy_renderer import SeedanceRenderer
 from project import Project
+from render_status import COMPLETE, FAILED, RENDERING
 from render_types import RenderSettings
 from scene import Scene
 
@@ -30,15 +31,28 @@ class Renderer:
             print(f"Rendering Scene {scene.scene_number:03d}")
             print(f"Renderer: {self.backend.name}")
             print(f"Camera language: {scene.camera_language}")
-            settings = self._settings_for_scene(scene)
-            result = self.backend.render_scene(project, scene, settings)
-            managed_video = self.asset_manager.normalize_scene_video(
-                scene.scene_number,
-                result.video_path,
-            )
-            scene.rendered_video = managed_video
-            rendered_videos.append(managed_video)
-            print(f"Scene {scene.scene_number:03d} rendered successfully.")
+            scene.render_status = RENDERING
+            scene.render_progress = 0.0
+            scene.render_error = ""
+            scene.render_attempts += 1
+
+            try:
+                settings = self._settings_for_scene(scene)
+                result = self.backend.render_scene(project, scene, settings)
+                managed_video = self.asset_manager.normalize_scene_video(
+                    scene.scene_number,
+                    result.video_path,
+                )
+                scene.rendered_video = managed_video
+                scene.render_status = COMPLETE
+                scene.render_progress = 1.0
+                rendered_videos.append(managed_video)
+                print(f"Scene {scene.scene_number:03d} rendered successfully.")
+            except Exception as exc:
+                scene.render_status = FAILED
+                scene.render_error = str(exc)
+                scene.render_progress = 0.0
+                raise
 
         return rendered_videos
 
