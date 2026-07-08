@@ -1,0 +1,26 @@
+{
+  "name": "ghost-director-studio",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@types/node": "latest",
+    "@types/react": "latest",
+    "@types/react-dom": "latest",
+    "autoprefixer": "latest",
+    "framer-motion": "latest",
+    "next": "latest",
+    "postcss": "latest",
+    "react": "latest",
+    "react-dom": "latest",
+    "react-icons": "latest",
+    "tailwindcss": "latest",
+    "typescript": "latest"
+  },
+  "devDependencies": {}
+}
