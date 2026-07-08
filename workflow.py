@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import Any, Dict, Optional
 
 from config import DEFAULT_CONFIG
+from structured_logger import logger
 from workflow_validation import WorkflowValidator
 
 
@@ -13,4 +14,7 @@ class WorkflowLoader:
         self.validator = WorkflowValidator()
 
     def load(self) -> Dict[str, Any]:
-        return self.validator.validate_file(self.workflow_path)
+        logger.info("workflow_loading", workflow_path=str(self.workflow_path))
+        workflow = self.validator.validate_file(self.workflow_path)
+        logger.info("workflow_loaded", workflow_path=str(self.workflow_path))
+        return workflow

@@ -1,3 +1,4 @@
+import time
 from typing import List, Optional
 
 from asset_manager import AssetManager
@@ -7,6 +8,7 @@ from project import Project
 from render_status import COMPLETE, FAILED, RENDERING
 from render_types import RenderSettings
 from scene import Scene
+from structured_logger import logger
 
 
 class Renderer:
@@ -28,9 +30,12 @@ class Renderer:
         rendered_videos = []
 
         for scene in self._selected_scenes(project, scene_numbers):
-            print(f"Rendering Scene {scene.scene_number:03d}")
-            print(f"Renderer: {self.backend.name}")
-            print(f"Camera language: {scene.camera_language}")
+            started_at = time.time()
+            logger.info(
+                "render_scene_started",
+                renderer=self.backend.name,
+                scene_number=scene.scene_number,
+            )
             scene.render_status = RENDERING
             scene.render_progress = 0.0
             scene.render_error = ""
@@ -47,11 +52,22 @@ class Renderer:
                 scene.render_status = COMPLETE
                 scene.render_progress = 1.0
                 rendered_videos.append(managed_video)
-                print(f"Scene {scene.scene_number:03d} rendered successfully.")
+                logger.info(
+                    "render_scene_finished",
+                    elapsed_seconds=round(time.time() - started_at, 3),
+                    scene_number=scene.scene_number,
+                    video_path=managed_video,
+                )
             except Exception as exc:
                 scene.render_status = FAILED
                 scene.render_error = str(exc)
                 scene.render_progress = 0.0
+                logger.error(
+                    "render_scene_failed",
+                    elapsed_seconds=round(time.time() - started_at, 3),
+                    error=str(exc),
+                    scene_number=scene.scene_number,
+                )
                 raise
 
         return rendered_videos

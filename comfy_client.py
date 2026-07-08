@@ -6,6 +6,7 @@ from urllib import request
 
 from comfy_health import ComfyHealthCheck
 from config import DEFAULT_CONFIG
+from structured_logger import logger
 
 
 class ComfyClient:
@@ -35,11 +36,14 @@ class ComfyClient:
         )
 
     def render(self, workflow: Dict[str, Any]) -> str:
+        logger.info("comfy_health_check_started", base_url=self.base_url)
         self.health_check.require_ready()
+        logger.info("comfy_health_check_finished", base_url=self.base_url)
         prompt_id = self.submit(workflow)
         return self.wait_for_completion(prompt_id)
 
     def submit(self, workflow: Dict[str, Any]) -> str:
+        logger.info("comfy_submit_started", base_url=self.base_url)
         payload = json.dumps({"prompt": workflow}).encode("utf-8")
         req = request.Request(
             f"{self.base_url}/prompt",
@@ -58,7 +62,7 @@ class ComfyClient:
         if not prompt_id:
             raise RuntimeError("ComfyUI did not return a prompt_id.")
 
-        print(f"ComfyUI prompt_id: {prompt_id}")
+        logger.info("comfy_submit_finished", prompt_id=prompt_id)
         return prompt_id
 
     def wait_for_completion(
@@ -67,6 +71,7 @@ class ComfyClient:
         timeout_seconds: Optional[int] = None,
         poll_interval: Optional[int] = None,
     ) -> str:
+        logger.info("comfy_wait_started", prompt_id=prompt_id)
         timeout = timeout_seconds or self.render_timeout_seconds
         interval = poll_interval or self.poll_interval_seconds
         deadline = time.time() + timeout
@@ -76,6 +81,11 @@ class ComfyClient:
             output_path = self._find_video_path(history, prompt_id)
 
             if output_path:
+                logger.info(
+                    "comfy_wait_finished",
+                    output_path=output_path,
+                    prompt_id=prompt_id,
+                )
                 return output_path
 
             time.sleep(interval)
