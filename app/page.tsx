@@ -25,7 +25,7 @@ import {
   FiVideo,
   FiZap
 } from "react-icons/fi";
-import { createProject, type ProjectInput } from "@/lib/api";
+import { createProject, type ProjectInput, type StudioProjectResponse } from "@/lib/api";
 
 const navItems = [
   [FiFolder, "Projects"],
@@ -115,6 +115,7 @@ export default function StudioHome() {
   const [sourceText, setSourceText] = useState(sampleInput.source_text);
   const [isDirecting, setIsDirecting] = useState(false);
   const [statusMessage, setStatusMessage] = useState("Ready to direct.");
+  const [projectResult, setProjectResult] = useState<StudioProjectResponse | null>(null);
 
   async function handleDirectFilm() {
     setIsDirecting(true);
@@ -126,6 +127,7 @@ export default function StudioHome() {
         title: projectTitle,
         source_text: sourceText || "A cinematic story begins in a city at sunrise."
       });
+      setProjectResult(result);
       setStatusMessage(
         `Created ${result.scene_count} scenes. Project status: ${result.production_status.status}.`
       );
@@ -136,6 +138,25 @@ export default function StudioHome() {
       setIsDirecting(false);
     }
   }
+  const displayScenes = projectResult?.project.scenes.map((scene) => ({
+    id: scene.scene_number,
+    emotion: scene.emotion || "Unscored",
+    camera: scene.camera || "Camera pending",
+    duration: `${scene.duration}s`,
+    prompt: scene.prompt,
+    status: scene.render_status
+  })) ?? scenes.map((scene) => ({ ...scene, prompt: "", status: "PREVIEW" }));
+
+  const liveStages = projectResult ? [
+    ["Analyze Story", 100, "complete"],
+    ["Create Characters", 100, "complete"],
+    ["Plan Scenes", 100, "complete"],
+    ["Generate Prompts", 100, "complete"],
+    ["Build Timeline", 100, "complete"],
+    ["Queue Rendering", projectResult.render_queue.length ? 100 : 0, projectResult.render_queue.length ? "complete" : "waiting"]
+  ] as const : stages;
+
+  const displayQueue = projectResult?.render_queue ?? [];
 
   return (
     <main className="min-h-screen bg-obsidian text-white">
@@ -212,7 +233,9 @@ export default function StudioHome() {
                   <span className="text-sm text-white/60">Main Input</span>
                   <textarea
                     className="min-h-72 w-full resize-y rounded border border-stroke bg-panelSoft p-4 leading-7 outline-none transition focus:border-ember"
+                    onChange={(event) => setSourceText(event.target.value)}
                     placeholder="Paste a prompt, story, lyrics, screenplay, chapter, markdown, or production notes..."
+                    value={sourceText}
                   />
                 </label>
 
@@ -271,7 +294,7 @@ export default function StudioHome() {
             <div className="mt-5 grid gap-5 xl:grid-cols-3">
               <Panel title="Live Progress" icon={<FiRefreshCw />}>
                 <div className="space-y-4">
-                  {stages.map(([label, progress, status]) => (
+                  {liveStages.map(([label, progress, status]) => (
                     <div key={label}>
                       <div className="mb-2 flex items-center justify-between text-sm">
                         <span>{label}</span>
@@ -287,12 +310,14 @@ export default function StudioHome() {
 
               <Panel title="Render Queue" icon={<FiLayers />}>
                 <div className="space-y-3">
-                  {["Waiting", "Rendering Scene 1", "Rendering Scene 2", "Failed Scene 3"].map((item) => (
-                    <div className="flex items-center justify-between rounded bg-panelSoft px-4 py-3 text-sm" key={item}>
-                      <span>{item}</span>
+                  {displayQueue.length ? displayQueue.map((item) => (
+                    <div className="flex items-center justify-between rounded bg-panelSoft px-4 py-3 text-sm" key={item.scene_number}>
+                      <span>Scene {item.scene_number.toString().padStart(3, "0")} / {item.status}</span>
                       <button className="text-gold">Retry</button>
                     </div>
-                  ))}
+                  )) : (
+                    <div className="rounded bg-panelSoft px-4 py-3 text-sm text-white/50">No scenes queued yet.</div>
+                  )}
                 </div>
               </Panel>
 
@@ -310,13 +335,14 @@ export default function StudioHome() {
 
             <Panel className="mt-5" title="Scenes" icon={<FiFilm />}>
               <div className="grid gap-4 lg:grid-cols-3">
-                {scenes.map((scene) => (
+                {displayScenes.map((scene) => (
                   <article className="rounded border border-stroke bg-panelSoft p-4" key={scene.id}>
                     <div className="mb-4 aspect-video rounded bg-gradient-to-br from-slate-800 via-zinc-900 to-orange-950" />
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <h4 className="font-semibold">Scene {scene.id.toString().padStart(3, "0")}</h4>
                         <p className="mt-1 text-sm text-white/50">{scene.emotion} / {scene.camera}</p>
+                        <p className="mt-2 line-clamp-3 text-xs text-white/40">{scene.prompt || scene.status}</p>
                       </div>
                       <span className="rounded bg-white/10 px-2 py-1 text-xs">{scene.duration}</span>
                     </div>
@@ -332,7 +358,7 @@ export default function StudioHome() {
 
             <Panel className="mt-5" title="Timeline" icon={<FiLayers />}>
               <div className="grid min-h-32 grid-cols-3 gap-3 rounded bg-black/25 p-4">
-                {scenes.map((scene) => (
+                {displayScenes.map((scene) => (
                   <div className="rounded border border-stroke bg-panelSoft p-3" key={scene.id}>
                     <p className="text-sm font-medium">Scene {scene.id}</p>
                     <p className="mt-2 text-xs text-white/45">Drag, trim, transition</p>

@@ -22,9 +22,51 @@ export type PipelineStage = {
   status: "waiting" | "active" | "complete";
 };
 
+export type StudioScene = {
+  scene_number: number;
+  duration: number;
+  emotion: string;
+  camera: string;
+  prompt: string;
+  character_ids: string[];
+  continuity_notes: string;
+  render_status: string;
+};
+
+export type StudioRenderQueueItem = {
+  scene_number: number;
+  status: string;
+  reason: string;
+  progress: number;
+  estimated_render_seconds: number | null;
+  attempts: number;
+  depends_on: number[];
+};
+
+export type StudioProductionStatus = {
+  total_scenes: number;
+  prompted_scenes: number;
+  rendered_scenes: number;
+  edit_ready_scenes: number;
+  failed_scenes: number;
+  status: string;
+};
+
+export type StudioProjectResponse = {
+  project: {
+    title: string;
+    project_type: string;
+    style: string;
+    scenes: StudioScene[];
+  };
+  scene_count: number;
+  production_status: StudioProductionStatus;
+  render_queue: StudioRenderQueueItem[];
+};
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_GHOST_DIRECTOR_API ?? "http://127.0.0.1:8001";
 
-export async function createProject(input: ProjectInput) {
+export async function createProject(input: ProjectInput): Promise<StudioProjectResponse> {
   const response = await fetch(`${API_BASE_URL}/projects`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
