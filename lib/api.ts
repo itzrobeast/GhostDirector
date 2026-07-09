@@ -74,6 +74,12 @@ export type StudioProductionStatus = {
   status: string;
 };
 
+
+export type StudioExportItem = {
+  label: string;
+  path: string;
+  available: boolean;
+};
 export type StudioProjectResponse = {
   project: {
     title: string;
@@ -87,6 +93,7 @@ export type StudioProjectResponse = {
   scene_count: number;
   production_status: StudioProductionStatus;
   render_queue: StudioRenderQueueItem[];
+  exports: StudioExportItem[];
 };
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_GHOST_DIRECTOR_API ?? "http://127.0.0.1:8001";

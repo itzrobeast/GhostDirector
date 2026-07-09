@@ -1,7 +1,10 @@
 from dataclasses import asdict
+from pathlib import Path
 from typing import List, Optional
 
 from fastapi import FastAPI, HTTPException
+
+from asset_manager import AssetManager
 from pydantic import BaseModel, Field
 
 from director import GhostDirector
@@ -11,6 +14,35 @@ from project import Project
 app = FastAPI(title="Ghost Director Studio API")
 director = GhostDirector()
 
+def _path_available(path: Path) -> bool:
+    if path.is_dir():
+        return any(path.iterdir())
+
+    return path.exists()
+
+
+def _export_manifest(project: Project) -> list[dict]:
+    assets = AssetManager()
+    export_targets = [
+        ("Project JSON", assets.get_project_json()),
+        ("Production Status", assets.get_production_status_json()),
+        ("Render Queue", assets.get_render_queue_json()),
+        ("Scene JSON", assets.scenes_dir),
+        ("Prompts", assets.prompts_dir),
+        ("Timeline", assets.get_timeline_json()),
+        ("Edit Decision List", assets.get_edit_decision_list_json()),
+        ("Final Movie", assets.get_final_movie()),
+        ("Assets", assets.output_dir),
+    ]
+
+    return [
+        {
+            "label": label,
+            "path": str(path),
+            "available": _path_available(path),
+        }
+        for label, path in export_targets
+    ]
 
 class ProjectInput(BaseModel):
     title: str = Field(..., min_length=1)
@@ -73,6 +105,7 @@ def create_project(input_data: ProjectInput) -> dict:
         "render_queue": [
             asdict(item) for item in director.render_queue(project)
         ],
+        "exports": _export_manifest(project),
     }
 
 
@@ -94,3 +127,12 @@ def current_render_queue() -> dict:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
 
     return {"items": [asdict(item) for item in director.render_queue(project)]}
+
+@app.get("/projects/current/exports")
+def current_project_exports() -> dict:
+    try:
+        project = director.load_project()
+    except Exception as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+    return {"items": _export_manifest(project)}

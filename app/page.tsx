@@ -133,6 +133,17 @@ const stages = [
   ["Queue Rendering", 0, "waiting"]
 ] as const;
 
+const exportItems = [
+  "Project JSON",
+  "Scene JSON",
+  "Prompts",
+  "Timeline",
+  "Edit Decision List",
+  "Final Movie",
+  "Assets",
+  "ZIP Archive"
+] as const;
+
 const scenes = [
   { id: 1, emotion: "Hopeful", camera: "Wide tracking", duration: "00:15" },
   { id: 2, emotion: "Tense", camera: "Slow dolly", duration: "00:12" },
@@ -229,6 +240,11 @@ export default function StudioHome() {
 
   const displayQueue = projectResult?.render_queue ?? [];
   const displayCharacters = Object.values(projectResult?.project.character_registry?.characters ?? {});
+  const displayExports = projectResult?.exports ?? exportItems.map((label) => ({
+    label,
+    path: "Generated after project creation",
+    available: false
+  }));
 
   function addAssets(files: FileList | File[], category: string) {
     const nextAssets = Array.from(files).map((file) => toAsset(file, category));
@@ -519,10 +535,15 @@ export default function StudioHome() {
 
               <Panel title="Export" icon={<FiDownload />}>
                 <div className="grid gap-3">
-                  {["Project JSON", "Scene JSON", "Prompts", "Timeline", "Edit Decision List", "Final Movie", "Assets", "ZIP Archive"].map((item) => (
-                    <button className="flex items-center justify-between rounded bg-panelSoft px-4 py-3 text-sm transition hover:bg-white/10" key={item}>
-                      {item}
-                      <FiDownload />
+                  {displayExports.map((item) => (
+                    <button className="rounded bg-panelSoft px-4 py-3 text-left text-sm transition hover:bg-white/10" key={item.label}>
+                      <span className="flex items-center justify-between gap-3">
+                        {item.label}
+                        <span className={`rounded px-2 py-1 text-xs ${item.available ? "bg-cyan/15 text-cyan" : "bg-white/10 text-white/45"}`}>
+                          {item.available ? "Ready" : "Pending"}
+                        </span>
+                      </span>
+                      <span className="mt-2 block truncate text-xs text-white/35">{item.path}</span>
                     </button>
                   ))}
                 </div>
