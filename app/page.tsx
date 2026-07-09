@@ -113,6 +113,8 @@ const sampleInput: ProjectInput = {
 export default function StudioHome() {
   const [projectTitle, setProjectTitle] = useState(sampleInput.title);
   const [sourceText, setSourceText] = useState(sampleInput.source_text);
+  const [projectType, setProjectType] = useState(sampleInput.project_type);
+  const [selectedStyle, setSelectedStyle] = useState(sampleInput.style);
   const [isDirecting, setIsDirecting] = useState(false);
   const [statusMessage, setStatusMessage] = useState("Ready to direct.");
   const [projectResult, setProjectResult] = useState<StudioProjectResponse | null>(null);
@@ -125,7 +127,9 @@ export default function StudioHome() {
       const result = await createProject({
         ...sampleInput,
         title: projectTitle,
-        source_text: sourceText || "A cinematic story begins in a city at sunrise."
+        project_type: projectType,
+        source_text: sourceText || "A cinematic story begins in a city at sunrise.",
+        style: selectedStyle
       });
       setProjectResult(result);
       setStatusMessage(
@@ -221,7 +225,7 @@ export default function StudioHome() {
                   <label className="space-y-2">
                     <span className="text-sm text-white/60">Project Type</span>
                     <div className="relative">
-                      <select className="h-12 w-full appearance-none rounded border border-stroke bg-panelSoft px-4 outline-none transition focus:border-ember" defaultValue={sampleInput.project_type}>
+                      <select className="h-12 w-full appearance-none rounded border border-stroke bg-panelSoft px-4 outline-none transition focus:border-ember" onChange={(event) => setProjectType(event.target.value)} value={projectType}>
                         {projectTypes.map((type) => <option key={type}>{type}</option>)}
                       </select>
                       <FiChevronDown className="pointer-events-none absolute right-4 top-4 text-white/50" />
@@ -283,7 +287,7 @@ export default function StudioHome() {
               <Panel title="Visual Style" icon={<FiImage />}>
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                   {styles.map((style) => (
-                    <button className="rounded border border-stroke bg-panelSoft p-4 text-left text-sm transition hover:border-ember hover:bg-white/10" key={style}>
+                    <button className={`rounded border p-4 text-left text-sm transition hover:border-ember hover:bg-white/10 ${selectedStyle === style ? "border-ember bg-ember/10" : "border-stroke bg-panelSoft"}`} key={style} onClick={() => setSelectedStyle(style)}>
                       {style}
                     </button>
                   ))}
