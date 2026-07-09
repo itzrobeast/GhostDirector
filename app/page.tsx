@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import type { ChangeEvent, DragEvent, ReactNode } from "react";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import {
@@ -78,6 +78,37 @@ const mediaTypes = [
   [FiLayers, "Fonts"]
 ] as const;
 
+type UploadedAsset = {
+  id: string;
+  category: string;
+  name: string;
+  size: number;
+  type: string;
+};
+
+const fileInputTypes = ".txt,.pdf,.docx,.md,.markdown,.json";
+
+function toAsset(file: File, category: string): UploadedAsset {
+  return {
+    id: `${category}-${file.name}-${file.size}-${file.lastModified}`,
+    category,
+    name: file.name,
+    size: file.size,
+    type: file.type || "Unknown"
+  };
+}
+
+function formatFileSize(size: number): string {
+  if (size < 1024) {
+    return `${size} B`;
+  }
+
+  if (size < 1024 * 1024) {
+    return `${Math.round(size / 1024)} KB`;
+  }
+
+  return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+}
 const stages = [
   ["Analyze Story", 100, "complete"],
   ["Create Characters", 72, "active"],
@@ -122,6 +153,7 @@ export default function StudioHome() {
   const [aspectRatio, setAspectRatio] = useState(sampleInput.aspect_ratio);
   const [targetDuration, setTargetDuration] = useState(String(sampleInput.target_duration));
   const [quality, setQuality] = useState(sampleInput.quality);
+  const [uploadedAssets, setUploadedAssets] = useState<UploadedAsset[]>([]);
   const [isDirecting, setIsDirecting] = useState(false);
   const [statusMessage, setStatusMessage] = useState("Ready to direct.");
   const [projectResult, setProjectResult] = useState<StudioProjectResponse | null>(null);
@@ -143,7 +175,8 @@ export default function StudioHome() {
         fps: Number(fps),
         aspect_ratio: aspectRatio,
         target_duration: Number(targetDuration),
-        quality
+        quality,
+        files: uploadedAssets.map((asset) => `${asset.category}: ${asset.name}`)
       });
       setProjectResult(result);
       setStatusMessage(
@@ -176,6 +209,34 @@ export default function StudioHome() {
 
   const displayQueue = projectResult?.render_queue ?? [];
 
+  function addAssets(files: FileList | File[], category: string) {
+    const nextAssets = Array.from(files).map((file) => toAsset(file, category));
+    setUploadedAssets((currentAssets) => {
+      const existingIds = new Set(currentAssets.map((asset) => asset.id));
+      return [
+        ...currentAssets,
+        ...nextAssets.filter((asset) => !existingIds.has(asset.id))
+      ];
+    });
+  }
+
+  function handleFileSelect(event: ChangeEvent<HTMLInputElement>, category: string) {
+    if (event.target.files) {
+      addAssets(event.target.files, category);
+      event.target.value = "";
+    }
+  }
+
+  function handleDrop(event: DragEvent<HTMLElement>, category: string) {
+    event.preventDefault();
+    if (event.dataTransfer.files.length) {
+      addAssets(event.dataTransfer.files, category);
+    }
+  }
+
+  function assetsFor(category: string) {
+    return uploadedAssets.filter((asset) => asset.category === category);
+  }
   return (
     <main className="min-h-screen bg-obsidian text-white">
       <div className="flex min-h-screen">
@@ -257,10 +318,29 @@ export default function StudioHome() {
                   />
                 </label>
 
-                <div className="mt-4 rounded border border-dashed border-stroke bg-black/20 p-5 text-center text-sm text-white/55">
+                <label
+                  className="mt-4 block cursor-pointer rounded border border-dashed border-stroke bg-black/20 p-5 text-center text-sm text-white/55 transition hover:border-ember hover:text-white"
+                  onDragOver={(event) => event.preventDefault()}
+                  onDrop={(event) => handleDrop(event, "Source Files")}
+                >
                   <FiUpload className="mx-auto mb-2" size={22} />
                   Drop TXT, PDF, DOCX, Markdown, or JSON files here
-                </div>
+                  <input
+                    accept={fileInputTypes}
+                    className="sr-only"
+                    multiple
+                    onChange={(event) => handleFileSelect(event, "Source Files")}
+                    type="file"
+                  />
+                </label>
+
+                {assetsFor("Source Files").length > 0 && (
+                  <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                    {assetsFor("Source Files").map((asset) => (
+                      <FileCard asset={asset} key={asset.id} />
+                    ))}
+                  </div>
+                )}
               </motion.section>
 
               <section className="grid gap-5">
@@ -284,13 +364,35 @@ export default function StudioHome() {
             <div className="mt-5 grid gap-5 xl:grid-cols-[0.9fr_1.1fr]">
               <Panel title="Media" icon={<FiUpload />}>
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-2">
-                  {mediaTypes.map(([Icon, label]) => (
-                    <div className="rounded border border-stroke bg-panelSoft p-4" key={label}>
-                      <Icon className="mb-3 text-gold" size={20} />
-                      <p className="text-sm font-medium">{label}</p>
-                      <p className="mt-1 text-xs text-white/45">Drop files</p>
-                    </div>
-                  ))}
+                  {mediaTypes.map(([Icon, label]) => {
+                    const categoryAssets = assetsFor(label);
+
+                    return (
+                      <label
+                        className="cursor-pointer rounded border border-stroke bg-panelSoft p-4 transition hover:border-ember hover:bg-white/10"
+                        key={label}
+                        onDragOver={(event) => event.preventDefault()}
+                        onDrop={(event) => handleDrop(event, label)}
+                      >
+                        <Icon className="mb-3 text-gold" size={20} />
+                        <p className="text-sm font-medium">{label}</p>
+                        <p className="mt-1 text-xs text-white/45">Drop files</p>
+                        <input
+                          className="sr-only"
+                          multiple
+                          onChange={(event) => handleFileSelect(event, label)}
+                          type="file"
+                        />
+                        {categoryAssets.length > 0 && (
+                          <div className="mt-3 space-y-2">
+                            {categoryAssets.map((asset) => (
+                              <FileCard asset={asset} key={asset.id} compact />
+                            ))}
+                          </div>
+                        )}
+                      </label>
+                    );
+                  })}
                 </div>
               </Panel>
 
@@ -384,6 +486,16 @@ export default function StudioHome() {
         </section>
       </div>
     </main>
+  );
+}
+
+function FileCard({ asset, compact = false }: { asset: UploadedAsset; compact?: boolean }) {
+  return (
+    <div className="rounded border border-stroke bg-black/25 px-3 py-2 text-left">
+      <p className="truncate text-xs font-medium text-white/80">{asset.name}</p>
+      {!compact && <p className="mt-1 text-xs text-white/40">{asset.category} / {formatFileSize(asset.size)}</p>}
+      {compact && <p className="mt-1 text-[11px] text-white/40">{formatFileSize(asset.size)}</p>}
+    </div>
   );
 }
 
