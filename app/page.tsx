@@ -26,7 +26,7 @@ import {
   FiVideo,
   FiZap
 } from "react-icons/fi";
-import { createProject, type ProjectInput, type StudioCharacter, type StudioProjectResponse } from "@/lib/api";
+import { createProject, fetchCurrentExports, fetchCurrentRenderQueue, fetchCurrentStatus, type ProjectInput, type StudioCharacter, type StudioProjectResponse } from "@/lib/api";
 
 const navItems = [
   [FiFolder, "Projects"],
@@ -184,6 +184,7 @@ export default function StudioHome() {
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [uploadedAssets, setUploadedAssets] = useState<UploadedAsset[]>([]);
   const [isDirecting, setIsDirecting] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [statusMessage, setStatusMessage] = useState("Ready to direct.");
   const [projectResult, setProjectResult] = useState<StudioProjectResponse | null>(null);
 
@@ -218,6 +219,35 @@ export default function StudioHome() {
       setStatusMessage(message);
     } finally {
       setIsDirecting(false);
+    }
+  }
+
+  async function handleRefreshProject() {
+    if (!projectResult) {
+      return;
+    }
+
+    setIsRefreshing(true);
+    setStatusMessage("Refreshing production status...");
+
+    try {
+      const [productionStatus, renderQueue, exports] = await Promise.all([
+        fetchCurrentStatus(),
+        fetchCurrentRenderQueue(),
+        fetchCurrentExports()
+      ]);
+      setProjectResult({
+        ...projectResult,
+        production_status: productionStatus,
+        render_queue: renderQueue,
+        exports
+      });
+      setStatusMessage(`Production status: ${productionStatus.status}.`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unknown error";
+      setStatusMessage(message);
+    } finally {
+      setIsRefreshing(false);
     }
   }
   const displayScenes = projectResult?.project.scenes.map((scene) => ({
@@ -308,10 +338,16 @@ export default function StudioHome() {
                 <h2 className="text-4xl font-semibold tracking-tight md:text-6xl">Ghost Director Studio</h2>
                 <p className="mt-3 max-w-2xl text-lg text-white/65">Create complete cinematic productions from a single idea.</p>
               </div>
-              <button className="inline-flex h-14 items-center justify-center gap-3 rounded bg-ember px-6 font-semibold text-white shadow-studio transition hover:bg-orange-500 disabled:cursor-not-allowed disabled:opacity-60" disabled={isDirecting} onClick={handleDirectFilm}>
-                <FiPlay size={20} />
-                {isDirecting ? "Directing..." : "Direct My Film"}
-              </button>
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <button className="inline-flex h-14 items-center justify-center gap-3 rounded bg-ember px-6 font-semibold text-white shadow-studio transition hover:bg-orange-500 disabled:cursor-not-allowed disabled:opacity-60" disabled={isDirecting} onClick={handleDirectFilm}>
+                  <FiPlay size={20} />
+                  {isDirecting ? "Directing..." : "Direct My Film"}
+                </button>
+                <button className="inline-flex h-14 items-center justify-center gap-3 rounded border border-stroke bg-panel px-5 font-semibold text-white/75 transition hover:border-ember hover:text-white disabled:cursor-not-allowed disabled:opacity-45" disabled={!projectResult || isRefreshing} onClick={handleRefreshProject}>
+                  <FiRefreshCw size={18} />
+                  {isRefreshing ? "Refreshing..." : "Refresh"}
+                </button>
+              </div>
             </header>
 
             <div className="grid gap-5 xl:grid-cols-[1.3fr_0.9fr]">

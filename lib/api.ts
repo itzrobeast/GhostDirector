@@ -111,3 +111,34 @@ export async function createProject(input: ProjectInput): Promise<StudioProjectR
 
   return response.json();
 }
+export async function fetchCurrentStatus(): Promise<StudioProductionStatus> {
+  const response = await fetch(`${API_BASE_URL}/projects/current/status`);
+
+  if (!response.ok) {
+    throw new Error("Ghost Director could not load project status.");
+  }
+
+  return response.json();
+}
+
+export async function fetchCurrentRenderQueue(): Promise<StudioRenderQueueItem[]> {
+  const response = await fetch(`${API_BASE_URL}/projects/current/render-queue`);
+
+  if (!response.ok) {
+    throw new Error("Ghost Director could not load the render queue.");
+  }
+
+  const data: { items: StudioRenderQueueItem[] } = await response.json();
+  return data.items;
+}
+
+export async function fetchCurrentExports(): Promise<StudioExportItem[]> {
+  const response = await fetch(`${API_BASE_URL}/projects/current/exports`);
+
+  if (!response.ok) {
+    throw new Error("Ghost Director could not load export status.");
+  }
+
+  const data: { items: StudioExportItem[] } = await response.json();
+  return data.items;
+}
