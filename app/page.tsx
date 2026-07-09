@@ -26,7 +26,7 @@ import {
   FiVideo,
   FiZap
 } from "react-icons/fi";
-import { createProject, type ProjectInput, type StudioProjectResponse } from "@/lib/api";
+import { createProject, type ProjectInput, type StudioCharacter, type StudioProjectResponse } from "@/lib/api";
 
 const navItems = [
   [FiFolder, "Projects"],
@@ -214,6 +214,7 @@ export default function StudioHome() {
   ] as const : stages;
 
   const displayQueue = projectResult?.render_queue ?? [];
+  const displayCharacters = Object.values(projectResult?.project.character_registry?.characters ?? {});
 
   function addAssets(files: FileList | File[], category: string) {
     const nextAssets = Array.from(files).map((file) => toAsset(file, category));
@@ -443,6 +444,19 @@ export default function StudioHome() {
               </Panel>
             </div>
 
+            <Panel className="mt-5" title="Characters" icon={<FiCamera />}>
+              {displayCharacters.length ? (
+                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                  {displayCharacters.map((character) => (
+                    <CharacterCard character={character} key={character.id} />
+                  ))}
+                </div>
+              ) : (
+                <div className="rounded border border-dashed border-stroke bg-panelSoft p-5 text-sm text-white/50">
+                  Character memory will appear here after Ghost Director creates or recognizes project characters.
+                </div>
+              )}
+            </Panel>
             <div className="mt-5 grid gap-5 xl:grid-cols-3">
               <Panel title="Live Progress" icon={<FiRefreshCw />}>
                 <div className="space-y-4">
@@ -525,6 +539,37 @@ export default function StudioHome() {
   );
 }
 
+function CharacterCard({ character }: { character: StudioCharacter }) {
+  const displayName = character.name || "Unnamed Character";
+  const details = [
+    character.species,
+    character.age ? `${character.age} years old` : "",
+    character.current_location
+  ].filter(Boolean).join(" / ");
+
+  return (
+    <article className="rounded border border-stroke bg-panelSoft p-4">
+      <div className="mb-4 flex items-start gap-3">
+        <div className="grid h-14 w-14 shrink-0 place-items-center rounded bg-ember/20 text-lg font-semibold text-gold">
+          {displayName.slice(0, 1).toUpperCase()}
+        </div>
+        <div className="min-w-0">
+          <h4 className="truncate font-semibold">{displayName}</h4>
+          <p className="mt-1 text-xs text-white/45">{details || "Persistent character"}</p>
+        </div>
+      </div>
+      <div className="space-y-2 text-xs text-white/55">
+        <p><span className="text-white/35">Clothing:</span> {character.clothing || "Not set"}</p>
+        <p><span className="text-white/35">Expression:</span> {character.facial_expression || character.emotional_state || "Not set"}</p>
+        <p><span className="text-white/35">Accessories:</span> {character.accessories.length ? character.accessories.join(", ") : "None"}</p>
+      </div>
+      <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
+        <button className="rounded bg-black/25 px-3 py-2 text-white/65 transition hover:text-white">Edit</button>
+        <button className="rounded bg-black/25 px-3 py-2 text-white/65 transition hover:text-white">Consistency</button>
+      </div>
+    </article>
+  );
+}
 function FileCard({ asset, compact = false }: { asset: UploadedAsset; compact?: boolean }) {
   return (
     <div className="rounded border border-stroke bg-black/25 px-3 py-2 text-left">

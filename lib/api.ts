@@ -43,6 +43,28 @@ export type StudioRenderQueueItem = {
   depends_on: number[];
 };
 
+
+export type StudioCharacter = {
+  id: string;
+  name: string;
+  description: string;
+  age: number | null;
+  gender: string | null;
+  species: string;
+  appearance: string;
+  hair: string;
+  skin: string;
+  eyes: string;
+  clothing: string;
+  voice: string;
+  accessories: string[];
+  personality: string;
+  hairstyle: string;
+  facial_expression: string;
+  emotional_state: string;
+  current_location: string;
+  props: string[];
+};
 export type StudioProductionStatus = {
   total_scenes: number;
   prompted_scenes: number;
@@ -58,6 +80,9 @@ export type StudioProjectResponse = {
     project_type: string;
     style: string;
     scenes: StudioScene[];
+    character_registry?: {
+      characters: Record<string, StudioCharacter>;
+    };
   };
   scene_count: number;
   production_status: StudioProductionStatus;
