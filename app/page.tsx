@@ -115,6 +115,13 @@ export default function StudioHome() {
   const [sourceText, setSourceText] = useState(sampleInput.source_text);
   const [projectType, setProjectType] = useState(sampleInput.project_type);
   const [selectedStyle, setSelectedStyle] = useState(sampleInput.style);
+  const [cameraStyle, setCameraStyle] = useState(sampleInput.camera_style);
+  const [rendererName, setRendererName] = useState(sampleInput.renderer);
+  const [resolution, setResolution] = useState(sampleInput.resolution);
+  const [fps, setFps] = useState(String(sampleInput.fps));
+  const [aspectRatio, setAspectRatio] = useState(sampleInput.aspect_ratio);
+  const [targetDuration, setTargetDuration] = useState(String(sampleInput.target_duration));
+  const [quality, setQuality] = useState(sampleInput.quality);
   const [isDirecting, setIsDirecting] = useState(false);
   const [statusMessage, setStatusMessage] = useState("Ready to direct.");
   const [projectResult, setProjectResult] = useState<StudioProjectResponse | null>(null);
@@ -129,7 +136,14 @@ export default function StudioHome() {
         title: projectTitle,
         project_type: projectType,
         source_text: sourceText || "A cinematic story begins in a city at sunrise.",
-        style: selectedStyle
+        style: selectedStyle,
+        camera_style: cameraStyle,
+        renderer: rendererName,
+        resolution,
+        fps: Number(fps),
+        aspect_ratio: aspectRatio,
+        target_duration: Number(targetDuration),
+        quality
       });
       setProjectResult(result);
       setStatusMessage(
@@ -252,21 +266,17 @@ export default function StudioHome() {
               <section className="grid gap-5">
                 <Panel title="Render Settings" icon={<FiZap />}>
                   <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
-                    {[
-                      ["Renderer", "Seedance"],
-                      ["Resolution", "1920x1080"],
-                      ["FPS", "24"],
-                      ["Aspect Ratio", "16:9"],
-                      ["Target Duration", "90 sec"],
-                      ["Quality", "High"]
-                    ].map(([label, value]) => (
-                      <Setting key={label} label={label} value={value} />
-                    ))}
+                    <Setting label="Renderer" onChange={setRendererName} options={["Seedance", "ComfyUI", "OpenArt", "Veo", "Higgsfield", "LTX", "Flux"]} value={rendererName} />
+                    <Setting label="Resolution" onChange={setResolution} options={["1920x1080", "1280x720", "1080x1920", "1024x1024"]} value={resolution} />
+                    <Setting label="FPS" onChange={setFps} options={["24", "30", "48", "60"]} value={fps} />
+                    <Setting label="Aspect Ratio" onChange={setAspectRatio} options={["16:9", "9:16", "1:1", "2.39:1"]} value={aspectRatio} />
+                    <Setting label="Target Duration" onChange={setTargetDuration} options={["30", "60", "90", "180"]} value={targetDuration} />
+                    <Setting label="Quality" onChange={setQuality} options={["Draft", "Standard", "High", "Ultra"]} value={quality} />
                   </div>
                 </Panel>
 
                 <Panel title="Camera Style" icon={<FiCamera />}>
-                  <Setting label="Direction Language" value="Hollywood" />
+                  <Setting label="Direction Language" onChange={setCameraStyle} options={["Hollywood", "Documentary", "Music Video", "Michael Bay", "Denis Villeneuve", "Wes Anderson", "Christopher Nolan", "Custom"]} value={cameraStyle} />
                 </Panel>
               </section>
             </div>
@@ -389,14 +399,19 @@ function Panel({ children, className = "", icon, title }: { children: ReactNode;
   );
 }
 
-function Setting({ label, value }: { label: string; value: string }) {
+function Setting({ label, onChange, options, value }: { label: string; onChange: (value: string) => void; options: string[]; value: string }) {
   return (
     <label className="space-y-2">
       <span className="text-xs text-white/45">{label}</span>
       <div className="relative">
-        <select className="h-11 w-full appearance-none rounded border border-stroke bg-panelSoft px-3 text-sm outline-none transition focus:border-ember" defaultValue={value}>
-          <option>{value}</option>
-          <option>Custom</option>
+        <select
+          className="h-11 w-full appearance-none rounded border border-stroke bg-panelSoft px-3 text-sm outline-none transition focus:border-ember"
+          onChange={(event) => onChange(event.target.value)}
+          value={value}
+        >
+          {options.map((option) => (
+            <option key={option}>{option}</option>
+          ))}
         </select>
         <FiChevronDown className="pointer-events-none absolute right-3 top-3.5 text-white/45" />
       </div>
