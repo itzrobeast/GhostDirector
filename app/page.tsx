@@ -99,6 +99,20 @@ function toAsset(file: File, category: string): UploadedAsset {
   };
 }
 
+
+function formatEta(seconds: number | null): string {
+  if (seconds === null) {
+    return "ETA pending";
+  }
+
+  if (seconds < 60) {
+    return `${seconds}s`;
+  }
+
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+  return remainingSeconds ? `${minutes}m ${remainingSeconds}s` : `${minutes}m`;
+}
 function formatFileSize(size: number): string {
   if (size < 1024) {
     return `${size} B`;
@@ -477,10 +491,26 @@ export default function StudioHome() {
               <Panel title="Render Queue" icon={<FiLayers />}>
                 <div className="space-y-3">
                   {displayQueue.length ? displayQueue.map((item) => (
-                    <div className="flex items-center justify-between rounded bg-panelSoft px-4 py-3 text-sm" key={item.scene_number}>
-                      <span>Scene {item.scene_number.toString().padStart(3, "0")} / {item.status}</span>
-                      <button className="text-gold">Retry</button>
-                    </div>
+                    <article className="rounded bg-panelSoft px-4 py-3 text-sm" key={item.scene_number}>
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="font-medium">Scene {item.scene_number.toString().padStart(3, "0")}</p>
+                          <p className="mt-1 text-xs text-white/45">{item.reason || "Waiting for renderer"}</p>
+                        </div>
+                        <span className="rounded bg-white/10 px-2 py-1 text-xs text-white/70">{item.status}</span>
+                      </div>
+                      <div className="mt-3 h-2 rounded bg-black/30">
+                        <div className="h-2 rounded bg-cyan" style={{ width: `${item.progress}%` }} />
+                      </div>
+                      <div className="mt-3 flex items-center justify-between gap-3 text-xs text-white/45">
+                        <span>{formatEta(item.estimated_render_seconds)}</span>
+                        <span>{item.attempts} attempts</span>
+                      </div>
+                      <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+                        <button className="rounded bg-black/25 px-3 py-2 text-white/65 transition hover:text-white">Retry</button>
+                        <button className="rounded bg-black/25 px-3 py-2 text-white/65 transition hover:text-white">Cancel</button>
+                      </div>
+                    </article>
                   )) : (
                     <div className="rounded bg-panelSoft px-4 py-3 text-sm text-white/50">No scenes queued yet.</div>
                   )}
