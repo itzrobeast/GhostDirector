@@ -1,5 +1,6 @@
 export type ProjectInput = {
   title: string;
+  project_id?: string;
   project_type: string;
   source_text: string;
   style: string;
@@ -75,6 +76,18 @@ export type StudioProductionStatus = {
 };
 
 
+
+export type StudioUploadedAsset = {
+  project_id: string;
+  id: string;
+  original_name: string;
+  stored_name: string;
+  category: string;
+  content_type: string;
+  size: number;
+  path: string;
+  thumbnail_path: string | null;
+};
 export type StudioExportItem = {
   label: string;
   path: string;
@@ -83,6 +96,7 @@ export type StudioExportItem = {
 export type StudioProjectResponse = {
   project: {
     title: string;
+  project_id?: string;
     project_type: string;
     style: string;
     scenes: StudioScene[];
@@ -90,6 +104,7 @@ export type StudioProjectResponse = {
       characters: Record<string, StudioCharacter>;
     };
   };
+  uploaded_assets: StudioUploadedAsset[];
   scene_count: number;
   production_status: StudioProductionStatus;
   render_queue: StudioRenderQueueItem[];
@@ -141,4 +156,22 @@ export async function fetchCurrentExports(): Promise<StudioExportItem[]> {
 
   const data: { items: StudioExportItem[] } = await response.json();
   return data.items;
+}
+export async function uploadProjectFile(projectId: string, file: File): Promise<StudioUploadedAsset> {
+  const formData = new FormData();
+  formData.append("project_id", projectId);
+  formData.append("file", file);
+
+  const response = await fetch(`${API_BASE_URL}/upload`, {
+    method: "POST",
+    body: formData
+  });
+
+  if (!response.ok) {
+    const message = await response.text();
+    throw new Error(message || "Ghost Director could not upload the file.");
+  }
+
+  const data: { asset: StudioUploadedAsset } = await response.json();
+  return data.asset;
 }

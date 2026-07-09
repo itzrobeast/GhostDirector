@@ -26,7 +26,7 @@ import {
   FiVideo,
   FiZap
 } from "react-icons/fi";
-import { createProject, fetchCurrentExports, fetchCurrentRenderQueue, fetchCurrentStatus, type ProjectInput, type StudioCharacter, type StudioProjectResponse } from "@/lib/api";
+import { createProject, fetchCurrentExports, fetchCurrentRenderQueue, fetchCurrentStatus, uploadProjectFile, type ProjectInput, type StudioCharacter, type StudioProjectResponse } from "@/lib/api";
 
 const navItems = [
   [FiFolder, "Projects"],
@@ -85,6 +85,10 @@ type UploadedAsset = {
   name: string;
   size: number;
   type: string;
+  path?: string;
+  thumbnailPath?: string | null;
+  uploadStatus: "uploading" | "stored" | "failed";
+  error?: string;
 };
 
 const fileInputTypes = ".txt,.pdf,.docx,.md,.markdown,.json";
@@ -95,11 +99,20 @@ function toAsset(file: File, category: string): UploadedAsset {
     category,
     name: file.name,
     size: file.size,
-    type: file.type || "Unknown"
+    type: file.type || "Unknown",
+    uploadStatus: "uploading"
   };
 }
 
 
+
+function createProjectId(): string {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
+    return crypto.randomUUID();
+  }
+
+  return `project-${Date.now()}`;
+}
 function formatEta(seconds: number | null): string {
   if (seconds === null) {
     return "ETA pending";
@@ -169,6 +182,7 @@ const sampleInput: ProjectInput = {
 
 export default function StudioHome() {
   const [projectTitle, setProjectTitle] = useState(sampleInput.title);
+  const [projectId] = useState(createProjectId);
   const [sourceText, setSourceText] = useState(sampleInput.source_text);
   const [projectType, setProjectType] = useState(sampleInput.project_type);
   const [selectedStyle, setSelectedStyle] = useState(sampleInput.style);
@@ -196,6 +210,7 @@ export default function StudioHome() {
       const result = await createProject({
         ...sampleInput,
         title: projectTitle,
+        project_id: projectId,
         project_type: projectType,
         source_text: sourceText || "A cinematic story begins in a city at sunrise.",
         style: selectedStyle,
@@ -208,7 +223,7 @@ export default function StudioHome() {
         quality,
         negative_prompt: negativePrompt,
         seed: seed ? Number(seed) : undefined,
-        files: uploadedAssets.map((asset) => `${asset.category}: ${asset.name}`)
+        files: uploadedAssets.map((asset) => asset.path ?? `${asset.category}: ${asset.name}`)
       });
       setProjectResult(result);
       setStatusMessage(
@@ -278,8 +293,10 @@ export default function StudioHome() {
     available: false
   }));
 
-  function addAssets(files: FileList | File[], category: string) {
-    const nextAssets = Array.from(files).map((file) => toAsset(file, category));
+  async function addAssets(files: FileList | File[], category: string) {
+    const selectedFiles = Array.from(files);
+    const nextAssets = selectedFiles.map((file) => toAsset(file, category));
+
     setUploadedAssets((currentAssets) => {
       const existingIds = new Set(currentAssets.map((asset) => asset.id));
       return [
@@ -287,11 +304,38 @@ export default function StudioHome() {
         ...nextAssets.filter((asset) => !existingIds.has(asset.id))
       ];
     });
+
+    await Promise.all(selectedFiles.map(async (file) => {
+      const localAsset = toAsset(file, category);
+
+      try {
+        const storedAsset = await uploadProjectFile(projectId, file);
+        setUploadedAssets((currentAssets) => currentAssets.map((asset) => (
+          asset.id === localAsset.id
+            ? {
+              ...asset,
+              id: storedAsset.id,
+              category: storedAsset.category,
+              path: storedAsset.path,
+              thumbnailPath: storedAsset.thumbnail_path,
+              uploadStatus: "stored"
+            }
+            : asset
+        )));
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Upload failed";
+        setUploadedAssets((currentAssets) => currentAssets.map((asset) => (
+          asset.id === localAsset.id
+            ? { ...asset, error: message, uploadStatus: "failed" }
+            : asset
+        )));
+      }
+    }));
   }
 
   function handleFileSelect(event: ChangeEvent<HTMLInputElement>, category: string) {
     if (event.target.files) {
-      addAssets(event.target.files, category);
+      void addAssets(event.target.files, category);
       event.target.value = "";
     }
   }
@@ -299,7 +343,7 @@ export default function StudioHome() {
   function handleDrop(event: DragEvent<HTMLElement>, category: string) {
     event.preventDefault();
     if (event.dataTransfer.files.length) {
-      addAssets(event.dataTransfer.files, category);
+      void addAssets(event.dataTransfer.files, category);
     }
   }
 
@@ -667,11 +711,20 @@ function CharacterCard({ character }: { character: StudioCharacter }) {
   );
 }
 function FileCard({ asset, compact = false }: { asset: UploadedAsset; compact?: boolean }) {
+  const statusLabel = asset.uploadStatus === "stored" ? "Stored" : asset.uploadStatus === "failed" ? "Failed" : "Uploading";
+
   return (
     <div className="rounded border border-stroke bg-black/25 px-3 py-2 text-left">
-      <p className="truncate text-xs font-medium text-white/80">{asset.name}</p>
+      <div className="flex items-start justify-between gap-2">
+        <p className="truncate text-xs font-medium text-white/80">{asset.name}</p>
+        <span className={`shrink-0 rounded px-2 py-0.5 text-[10px] ${asset.uploadStatus === "stored" ? "bg-cyan/15 text-cyan" : asset.uploadStatus === "failed" ? "bg-red-500/15 text-red-200" : "bg-white/10 text-white/45"}`}>
+          {statusLabel}
+        </span>
+      </div>
       {!compact && <p className="mt-1 text-xs text-white/40">{asset.category} / {formatFileSize(asset.size)}</p>}
       {compact && <p className="mt-1 text-[11px] text-white/40">{formatFileSize(asset.size)}</p>}
+      {asset.path && !compact && <p className="mt-1 truncate text-[11px] text-white/30">{asset.path}</p>}
+      {asset.error && <p className="mt-1 line-clamp-2 text-[11px] text-red-200/80">{asset.error}</p>}
     </div>
   );
 }

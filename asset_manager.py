@@ -28,6 +28,25 @@ class AssetManager:
         ]:
             path.mkdir(parents=True, exist_ok=True)
 
+    def get_project_dir(self, project_id: str) -> Path:
+        return self.projects_dir / project_id
+
+    def get_project_assets_dir(self, project_id: str) -> Path:
+        return self.get_project_dir(project_id) / "assets"
+
+    def get_project_asset_category_dir(
+        self,
+        project_id: str,
+        category: str,
+    ) -> Path:
+        return self.get_project_assets_dir(project_id) / category
+
+    def get_project_asset_manifest(self, project_id: str) -> Path:
+        return self.get_project_assets_dir(project_id) / "assets.json"
+
+    def get_project_asset_thumbnails_dir(self, project_id: str) -> Path:
+        return self.get_project_assets_dir(project_id) / "thumbnails"
+
     def get_project_json(self) -> Path:
         return self.projects_dir / "project.json"
 
