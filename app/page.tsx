@@ -8,6 +8,7 @@ import {
   FiBox,
   FiCamera,
   FiChevronDown,
+  FiChevronsDown,
   FiClock,
   FiDownload,
   FiFilm,
@@ -153,6 +154,9 @@ export default function StudioHome() {
   const [aspectRatio, setAspectRatio] = useState(sampleInput.aspect_ratio);
   const [targetDuration, setTargetDuration] = useState(String(sampleInput.target_duration));
   const [quality, setQuality] = useState(sampleInput.quality);
+  const [negativePrompt, setNegativePrompt] = useState(sampleInput.negative_prompt);
+  const [seed, setSeed] = useState(sampleInput.seed ? String(sampleInput.seed) : "");
+  const [advancedOpen, setAdvancedOpen] = useState(false);
   const [uploadedAssets, setUploadedAssets] = useState<UploadedAsset[]>([]);
   const [isDirecting, setIsDirecting] = useState(false);
   const [statusMessage, setStatusMessage] = useState("Ready to direct.");
@@ -176,6 +180,8 @@ export default function StudioHome() {
         aspect_ratio: aspectRatio,
         target_duration: Number(targetDuration),
         quality,
+        negative_prompt: negativePrompt,
+        seed: seed ? Number(seed) : undefined,
         files: uploadedAssets.map((asset) => `${asset.category}: ${asset.name}`)
       });
       setProjectResult(result);
@@ -353,6 +359,36 @@ export default function StudioHome() {
                     <Setting label="Target Duration" onChange={setTargetDuration} options={["30", "60", "90", "180"]} value={targetDuration} />
                     <Setting label="Quality" onChange={setQuality} options={["Draft", "Standard", "High", "Ultra"]} value={quality} />
                   </div>
+                  <button
+                    className="mt-4 flex w-full items-center justify-between rounded border border-stroke bg-panelSoft px-3 py-3 text-left text-sm text-white/70 transition hover:border-ember hover:text-white"
+                    onClick={() => setAdvancedOpen((isOpen) => !isOpen)}
+                    type="button"
+                  >
+                    Advanced options
+                    <FiChevronsDown className={`transition ${advancedOpen ? "rotate-180" : ""}`} />
+                  </button>
+                  {advancedOpen && (
+                    <div className="mt-3 grid gap-3">
+                      <label className="space-y-2">
+                        <span className="text-xs text-white/45">Seed</span>
+                        <input
+                          className="h-11 w-full rounded border border-stroke bg-panelSoft px-3 text-sm outline-none transition focus:border-ember"
+                          inputMode="numeric"
+                          onChange={(event) => setSeed(event.target.value.replace(/\D/g, ""))}
+                          placeholder="Auto"
+                          value={seed}
+                        />
+                      </label>
+                      <label className="space-y-2">
+                        <span className="text-xs text-white/45">Negative Prompt</span>
+                        <textarea
+                          className="min-h-24 w-full resize-y rounded border border-stroke bg-panelSoft px-3 py-2 text-sm leading-6 outline-none transition focus:border-ember"
+                          onChange={(event) => setNegativePrompt(event.target.value)}
+                          value={negativePrompt}
+                        />
+                      </label>
+                    </div>
+                  )}
                 </Panel>
 
                 <Panel title="Camera Style" icon={<FiCamera />}>
