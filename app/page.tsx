@@ -256,8 +256,10 @@ export default function StudioHome() {
     camera: scene.camera || "Camera pending",
     duration: `${scene.duration}s`,
     prompt: scene.prompt,
-    status: scene.render_status
-  })) ?? scenes.map((scene) => ({ ...scene, prompt: "", status: "PREVIEW" }));
+    status: scene.render_status,
+    characterCount: scene.character_ids.length,
+    continuity: scene.continuity_notes
+  })) ?? scenes.map((scene) => ({ ...scene, prompt: "", status: "PREVIEW", characterCount: 0, continuity: "Continuity pending" }));
 
   const liveStages = projectResult ? [
     ["Analyze Story", 100, "complete"],
@@ -596,8 +598,15 @@ export default function StudioHome() {
                         <h4 className="font-semibold">Scene {scene.id.toString().padStart(3, "0")}</h4>
                         <p className="mt-1 text-sm text-white/50">{scene.emotion} / {scene.camera}</p>
                         <p className="mt-2 line-clamp-3 text-xs text-white/40">{scene.prompt || scene.status}</p>
+                        <div className="mt-3 grid gap-2 text-xs text-white/45">
+                          <span>{scene.characterCount} characters</span>
+                          <span className="line-clamp-2">{scene.continuity || "Continuity pending"}</span>
+                        </div>
                       </div>
-                      <span className="rounded bg-white/10 px-2 py-1 text-xs">{scene.duration}</span>
+                      <div className="grid gap-2 text-right">
+                        <span className="rounded bg-white/10 px-2 py-1 text-xs">{scene.duration}</span>
+                        <span className="rounded bg-black/25 px-2 py-1 text-xs text-white/45">{scene.status}</span>
+                      </div>
                     </div>
                     <div className="mt-4 grid grid-cols-4 gap-2 text-xs">
                       {['Preview', 'Edit', 'Re-render', 'Delete'].map((action) => (
